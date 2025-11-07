@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- `Readable-first design`: Planned components use explicit naming, straightforward control flow, and
+  describe how intent will stay obvious in the code.
+- `TDD-first workflow`: Outline the failing tests that will be written first plus the mocks/stubs
+  used to isolate external services.
+- `Automation coverage`: Identify the lint/test/docs scripts (local + CI) that will enforce the
+  change and confirm they run as part of this feature.
+- `Intentional simplicity`: Explain how the scope honors KISS/DRY/SOLID/YAGNI and defers speculative
+  work until another story demands it.
+- `Explain the why`: Call out design tradeoffs and reference where rationale-focused comments or
+  ADRs will live so reviewers have context.
 
 ## Project Structure
 

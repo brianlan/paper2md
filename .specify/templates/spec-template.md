@@ -20,6 +20,12 @@
   - Demonstrated to users independently
 -->
 
+> **Constitution Alignment**
+> - Describe the failing tests (unit/integration) that will be written first for each story and the
+>   mocks/stubs that keep them hermetic.
+> - Call out the automation (lint, CI pipelines, scripts) that will enforce success criteria.
+> - Explain how the story keeps code readable and what rationale will be preserved in comments or ADRs.
+
 ### User Story 1 - [Brief Title] (Priority: P1)
 
 [Describe this user journey in plain language]
@@ -82,6 +88,9 @@
   Fill them out with the right functional requirements.
 -->
 
+> Keep requirements intentionally small and reference how each one upholds KISS, DRY, SOLID, and YAGNI.
+> Explicitly note the automated checks that will verify the behavior to maintain TDD coverage.
+
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
@@ -113,3 +122,11 @@
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+
+## Rationale & Readability Notes *(mandatory)*
+
+- Outline the key design decisions, tradeoffs, and rejected alternatives along with links to source
+  material so reviewers understand the \"why\".
+- Identify modules/files requiring intent-focused comments and describe the planned comment style.
+- Record any deviations from simplicity principles plus the plan for refactoring once they are no
+  longer necessary.
