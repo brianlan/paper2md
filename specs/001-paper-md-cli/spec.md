@@ -156,7 +156,9 @@ markdown without altering the conversion output.
 ### Functional Requirements
 
 - **FR-001**: The CLI MUST accept a local PDF path plus output directory arguments and verify it is
-  running inside the `/ssd4/envs/llm_py310_torch271_cu128` conda environment before processing.
+  running inside the `/ssd4/envs/llm_py310_torch271_cu128` conda environment before processing,
+  aborting with an actionable error message if the check fails (the tool does not auto-activate the
+  environment).
 - **FR-002**: The tool MUST call the existing GROBID Docker service available on `http://localhost:8070`,
   retrieve the TEI XML scaffold, and cache it for downstream reconciliation, failing fast with clear
   errors if unreachable.
@@ -185,9 +187,11 @@ markdown without altering the conversion output.
 ### Non-Functional Requirements
 
 - **NFR-001**: The CLI MUST complete a 20-page conversion (including fidelity audit) in ≤10 minutes
-  and process each page in ≤30 seconds, logging per-page timings for regression tests.
-- **NFR-002**: Structured logging MUST record every external call (GROBID, pdf2image, models) with
-  correlation IDs so outages are diagnosable post-run.
+  and process each page in ≤30 seconds; the orchestrator MUST emit per-page duration metrics (start/end
+  timestamps, page index) that are persisted to logs and perf fixtures for regression tests.
+- **NFR-002**: Structured logging MUST record every external call (GROBID, pdf2image, models) with a
+  consistent correlation identifier (`job_id` + `page_id` where applicable) so outages are diagnosable
+  post-run and traces can be reconstructed.
 - **NFR-003**: The tool MUST degrade gracefully when GROBID or local models are unreachable by emitting
   actionable error messages and skipping destructive retries, per constitution Principle IV.
 - **NFR-004**: Documentation (`README`, `quickstart`, manifest schema comments) MUST explain why OCR
@@ -230,8 +234,9 @@ markdown without altering the conversion output.
   scope but must be surfaced to users.
 - Local model `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` stays installed with necessary runtime
   dependencies and GPU access for both asset detection and OCR passes.
-- Users launch the CLI from the specified conda environment; the tool only warns (does not manage)
-  environment activation.
+- Users launch the CLI from the specified conda environment; the tool verifies this requirement and
+  exits with an actionable error if mismatched, but it does not attempt to manage/activate the
+  environment automatically.
 - Sample PDFs (including `streampetr.pdf`) are available for automated regression tests and QA.
 
 ## Rationale & Readability Notes *(mandatory)*

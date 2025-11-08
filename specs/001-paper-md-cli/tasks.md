@@ -159,6 +159,8 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T060 [P] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
 - [ ] T061 [P] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
 - [ ] T062 [P] Add `tests/integration/test_perf_timings.py` that records per-page durations, fails if any page exceeds 30 s, and updates `docs/perf-report.md` with the captured SLA data
+- [ ] T063 [P] Instrument `src/paper2md/pipeline/orchestrator.py` to log per-page start/end timestamps + metrics and persist them to the manifest/logs; add pytest coverage ensuring timings exist
+- [ ] T064 [P] Propagate correlation IDs (`job_id`/`page_id`) through adapters (`grobid.py`, `vlm_extractor.py`, `ocr.py`) and assert structured logs contain them via new tests in `tests/unit/pipeline/test_logging.py`
 
 ---
 

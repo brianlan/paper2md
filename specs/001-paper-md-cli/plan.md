@@ -10,8 +10,9 @@
 Create a conda-bound CLI that ingests an academic PDF, derives a TEI XML scaffold via the local
 GROBID service (`http://localhost:8070`), rasterizes each page at 300 DPI, and coordinates the local
 Qwen3-VL model (for figures/tables/algorithms/equations *and* OCR text) to produce a fully-structured
-markdown package. The CLI must also re-run the VLM to audit fidelity and emit a report covering
-structure, assets, and equations so researchers can trust the conversion without manual QA.
+markdown package. The CLI enforces the mandated conda environment, instruments per-page timing and
+correlation-ID logs for every external call, and re-runs the VLM to audit fidelity so researchers can
+trust the conversion without manual QA.
 
 ## Technical Context
 
@@ -28,8 +29,8 @@ structure, assets, and equations so researchers can trust the conversion without
 **Target Platform**: Linux workstation with GPU access (same host as models/GROBID)  
 **Project Type**: Single-project CLI (`src/paper2md/...`)  
 **Tooling**: Poetry for dependency management and scripts (`poetry run ...`)  
-**Performance Goals**: Convert a 20-page paper including audit in ≤10 minutes; per-page processing ≤30 s  
-**Constraints**: Must run inside prescribed conda env, offline (local services only), memory-aware streaming for >100 pages  
+**Performance Goals**: Convert a 20-page paper including audit in ≤10 minutes; per-page processing ≤30 s with timing telemetry persisted  
+**Constraints**: Must run inside prescribed conda env (fail fast if mismatched), offline (local services only), memory-aware streaming for >100 pages  
 **Scale/Scope**: Single concurrent conversion per invocation; designed for batch scripting but not multi-tenant service
 
 ## Constitution Check
@@ -122,8 +123,9 @@ All unknowns have been resolved and captured in `research.md`. Key tasks complet
 3. **Rasterization strategy** – Selected pdf2image with streaming to control memory for >100 pages.
 4. **Asset detection pipeline** – Defined per-page Qwen3-VL invocation contract plus JSON manifest schema.
 5. **OCR reconciliation** – Established column detection + TEI merge rules with logging of overrides.
-6. **Fidelity review loop** – Defined evaluation report schema and persistence.
-7. **Automation approach** – Locked in pytest + ruff + mypy executed via `make test`.
+6. **Instrumentation & observability** – Defined per-page timing hooks and correlation-ID logging across adapters.
+7. **Fidelity review loop** – Defined evaluation report schema and persistence.
+8. **Automation approach** – Locked in pytest + ruff + mypy executed via `make test`.
 
 Artifacts: `specs/001-paper-md-cli/research.md`
 
