@@ -8,11 +8,10 @@
 ## Summary
 
 Create a conda-bound CLI that ingests an academic PDF, derives a TEI XML scaffold via the local
-GROBID service (`http://localhost:8070`), rasterizes each page at 300 DPI, and coordinates local
-models (Qwen3-VL for figures/tables/algorithms/equations, Chandra OCR for text) to produce a
-fully-structured markdown package. The CLI must also re-run the VLM to audit fidelity and emit a
-report covering structure, assets, and equations so researchers can trust the conversion without
-manual QA.
+GROBID service (`http://localhost:8070`), rasterizes each page at 300 DPI, and coordinates the local
+Qwen3-VL model (for figures/tables/algorithms/equations *and* OCR text) to produce a fully-structured
+markdown package. The CLI must also re-run the VLM to audit fidelity and emit a report covering
+structure, assets, and equations so researchers can trust the conversion without manual QA.
 
 ## Technical Context
 
@@ -81,12 +80,13 @@ src/
 │   │   ├── grobid.py          # XML scaffold client
 │   │   ├── rasterizer.py      # pdf2image wrapper
 │   │   ├── vlm_extractor.py   # Qwen3-VL asset detection
-│   │   ├── ocr.py             # Chandra OCR integration
+│   │   ├── ocr.py             # Qwen3-VL OCR integration
 │   │   └── reconciler.py      # Merge scaffold + OCR + assets
 │   ├── models/
 │   │   ├── manifest.py        # Pydantic data classes
 │   │   └── evaluation.py
 │   └── services/
+│       ├── markdown_writer.py # Markdown + asset embedding helpers
 │       ├── storage.py         # Filesystem I/O helpers
 │       └── evaluation.py      # VLM fidelity review orchestrator
 tests/
@@ -102,7 +102,8 @@ tests/
 ```
 
 **Structure Decision**: Single CLI project under `src/paper2md` with dedicated pipeline modules and
-pytest-based tests organized by unit vs. integration to keep responsibilities readable.
+services (markdown writer, storage, evaluation); pytest-based tests stay organized by unit vs.
+integration to keep responsibilities readable.
 
 ## Complexity Tracking
 

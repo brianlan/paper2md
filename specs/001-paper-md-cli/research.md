@@ -29,8 +29,8 @@
   - *Multiple specialized models*: Would require additional deployments and violate "local only" constraint.
 
 ## 5. Text Extraction & Reconciliation
-- **Decision**: Run `/ssd4/models/datalab-to/chandra` OCR on each rasterized page, detect column breaks, and merge with the TEI scaffold by matching headings + paragraph hashes, favoring OCR text when conflicts arise but logging overrides.
-- **Rationale**: OCR is more faithful for glyph-level accuracy, while TEI provides structure; merging both preserves headings/subsections while fixing typos, satisfying the "readable over clever" principle.
+- **Decision**: Re-use `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` in OCR mode on each rasterized page, detect column breaks, and merge with the TEI scaffold by matching headings + paragraph hashes, favoring OCR text when conflicts arise but logging overrides.
+- **Rationale**: Keeping a single VLM for assets + OCR simplifies deployment, while TEI still provides structure; merging both preserves headings/subsections while fixing typos, satisfying the "readable over clever" principle.
 - **Alternatives Considered**:
   - *Use GROBID text only*: Faster but risks mangled equations/ligatures.
   - *Use OCR only*: Would lose clean section hierarchy and numbering.

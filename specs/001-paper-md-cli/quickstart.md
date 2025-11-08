@@ -23,7 +23,7 @@ This command:
 - Calls GROBID for TEI XML
 - Rasterizes each page at 300 DPI
 - Extracts figures/tables/algorithms/equations via Qwen3-VL
-- Runs OCR with Chandra and reconciles text
+- Uses Qwen3-VL OCR to capture text ordering and reconcile with TEI
 - Writes `paper.md`, asset crops, manifest JSON, and fidelity evaluation report
 
 ## 3. Review Outputs

@@ -107,7 +107,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 ### Implementation for User Story 2
 
 - [ ] T035 [US2] Implement `src/paper2md/pipeline/vlm_extractor.py` to call `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` per page and save crops
-- [ ] T036 [US2] Build `src/paper2md/pipeline/ocr.py` to run `/ssd4/models/datalab-to/chandra` and emit ordered text blocks
+- [ ] T036 [US2] Build `src/paper2md/pipeline/ocr.py` to run `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` in OCR mode and emit ordered text blocks
 - [ ] T037 [US2] Extend `src/paper2md/pipeline/reconciler.py` to merge OCR content with TEI scaffold and insert figure/table placeholders
 - [ ] T038 [US2] Implement `src/paper2md/models/manifest.py` AssetCatalog + EquationRef serialization with numbering and LaTeX sources
 - [ ] T039 [US2] Update markdown writer to embed figures/tables/algorithms and equations with captions/LaTeX
@@ -158,6 +158,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T059 Ensure intent-focused comments/ADRs capture reconciliation and evaluation heuristics
 - [ ] T060 [P] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
 - [ ] T061 [P] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
+- [ ] T062 [P] Add `tests/integration/test_perf_timings.py` that records per-page durations, fails if any page exceeds 30 s, and updates `docs/perf-report.md` with the captured SLA data
 
 ---
 

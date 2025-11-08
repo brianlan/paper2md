@@ -5,6 +5,17 @@
 **Status**: Draft  
 **Input**: User description: "Create a cli tool that takes as input a local pdf file (usually an academic paper) and convert it into a corresponding markdown file..."
 
+## Overview & Context
+
+Researchers currently juggle PDFs, local OCR/VLM models, and ad-hoc scripts to summarize papers, which
+is brittle and unrepeatable. Paper2MD introduces a single Typer CLI that must run inside
+`/ssd4/envs/llm_py310_torch271_cu128`, call the co-located GROBID + model stack, and emit a
+markdown+manifest package suitable for review. The CLI keeps all processing local (privacy mandate),
+streams large PDFs to respect memory caps, and documents every reconciliation decision so future
+audits understand why OCR or VLM outputs were trusted. Success depends on deterministic automation
+(`make test`) and structured artifacts that downstream tooling can rely on without re-opening the
+original PDF.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -47,6 +58,14 @@ same order as the source, and emits a manifest tying outputs to inputs.
 2. **Given** a converted markdown file, **When** the user inspects the section structure,
    **Then** headings, numbering, and hierarchy match the PDF outline detected by GROBID.
 
+**Failing Tests First**:
+- `tests/unit/test_cli.py::test_convert_requires_conda_env` (Typer CliRunner + monkeypatched
+  `os.environ`) guards env validation before any pipeline step.
+- `tests/unit/pipeline/test_grobid.py::test_fetch_scaffold_caches_xml` mocks `requests` to fail fast
+  when the Docker service is unreachable.
+- `tests/integration/test_end_to_end.py::test_convert_creates_markdown_manifest` uses fixture PDFs and
+  stubbed adapters to assert section ordering before implementation exists.
+
 ---
 
 ### User Story 2 - Analyst catalogues visual assets and equations (Priority: P1)
@@ -69,6 +88,17 @@ captions/equations appear inline in markdown.
 2. **Given** a page with equations, **When** the CLI requests extraction, **Then** it stores the
    LaTeX-renderable expression in markdown format, preserving numbering and references.
 
+**Failing Tests First**:
+- `tests/unit/pipeline/test_vlm_extractor.py::test_detects_expected_assets` stubs the Qwen3-VL calls
+  to demand deterministic crops/counts.
+- `tests/unit/pipeline/test_ocr.py::test_column_ordering` simulates mixed column layouts to force the
+  reconciler to fix ordering.
+- `tests/unit/models/test_manifest_assets.py::test_caption_and_equation_numbering` plus
+  `tests/unit/models/test_equations.py::test_latex_accuracy_against_goldens` assert numbering/accuracy
+  before writer code exists.
+- `tests/integration/test_end_to_end.py::test_assets_embedded_with_counts` introduces a PDF fixture
+  whose golden manifest must match extracted counts.
+
 ---
 
 ### User Story 3 - Reviewer audits fidelity (Priority: P2)
@@ -90,9 +120,15 @@ markdown without altering the conversion output.
 2. **Given** discrepancies (e.g., missing figure), **When** the review runs, **Then** it flags the
    mismatch with page/section references so the user can troubleshoot.
 
----
+**Failing Tests First**:
+- `tests/unit/services/test_evaluation.py::test_scores_record_discrepancies` mocks VLM responses to
+  demand structure/asset/equation scoring.
+- `tests/unit/test_cli.py::test_verify_command_runs_without_convert` ensures the Typer command wiring
+  exists for verification-only runs.
+- `tests/integration/test_end_to_end.py::test_verification_flags_corruption` corrupts markdown outputs
+  and expects the evaluation report to persist discrepancies before implementation.
 
-[Add more user stories as needed, each with an assigned priority]
+---
 
 ### Edge Cases
 
@@ -133,7 +169,7 @@ markdown without altering the conversion output.
   inherently spans multiple pages, and its caption text MUST be stored and linked in the markdown.
 - **FR-006**: Equations MUST be exported as markdown-renderable LaTeX strings, preserving numbering
   and in-text references.
-- **FR-007**: The CLI MUST analyze layout using the OCR model `/ssd4/models/datalab-to/chandra`,
+- **FR-007**: The CLI MUST analyze layout using `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` in OCR mode,
   merge OCR text with the GROBID scaffold, and resolve conflicts by favoring OCR content while
   logging any corrections back into the scaffold.
 - **FR-008**: The final markdown output MUST mirror the section hierarchy from GROBID, embed links to
@@ -145,6 +181,19 @@ markdown without altering the conversion output.
   tests covering PDF ingestion, asset counts, and evaluation reporting using fixture documents.
 - **FR-011**: The manifest MUST record a cryptographic checksum of the markdown output and verify the
   checksum whenever the package is read or delivered.
+
+### Non-Functional Requirements
+
+- **NFR-001**: The CLI MUST complete a 20-page conversion (including fidelity audit) in ≤10 minutes
+  and process each page in ≤30 seconds, logging per-page timings for regression tests.
+- **NFR-002**: Structured logging MUST record every external call (GROBID, pdf2image, models) with
+  correlation IDs so outages are diagnosable post-run.
+- **NFR-003**: The tool MUST degrade gracefully when GROBID or local models are unreachable by emitting
+  actionable error messages and skipping destructive retries, per constitution Principle IV.
+- **NFR-004**: Documentation (`README`, `quickstart`, manifest schema comments) MUST explain why OCR
+  overrides GROBID or why evaluation heuristics were chosen, satisfying Principle V.
+- **NFR-005**: Automation scripts (`make lint`, `make test`, CI workflows) MUST block merges unless
+  ruff, mypy, unit, and integration tests pass, reinforcing Principle III.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -179,8 +228,8 @@ markdown without altering the conversion output.
 
 - GROBID Docker service remains accessible at `http://localhost:8070`; outages are outside the CLI
   scope but must be surfaced to users.
-- Local models `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` and `/ssd4/models/datalab-to/chandra`
-  stay installed with necessary runtime dependencies and GPU access.
+- Local model `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` stays installed with necessary runtime
+  dependencies and GPU access for both asset detection and OCR passes.
 - Users launch the CLI from the specified conda environment; the tool only warns (does not manage)
   environment activation.
 - Sample PDFs (including `streampetr.pdf`) are available for automated regression tests and QA.
