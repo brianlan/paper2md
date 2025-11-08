@@ -170,7 +170,7 @@ markdown without altering the conversion output.
 - **FR-005**: Each detected figure/table/algorithm MUST be saved as a whole-image crop unless it
   inherently spans multiple pages, and its caption text MUST be stored and linked in the markdown.
 - **FR-006**: Equations MUST be exported as markdown-renderable LaTeX strings, preserving numbering
-  and in-text references.
+  and in-text references via the `EquationRef` schema described in Key Entities.
 - **FR-007**: The CLI MUST analyze layout using `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` in OCR mode,
   merge OCR text with the GROBID scaffold, and resolve conflicts by favoring OCR content while
   logging any corrections back into the scaffold.
@@ -207,6 +207,9 @@ markdown without altering the conversion output.
   detected columns, and asset bounding boxes for reconciliation logic.
 - **AssetCatalog**: Structured listing of every figure, table, algorithm, and equation, including
   captions, LaTeX, references, and output file paths.
+- **EquationRef**: Normalized description of each equation, including its LaTeX source, numbering,
+  page index, bounding box, and reference anchors so markdown and evaluation steps can link back to
+  the original PDF coordinates.
 - **MarkdownPackage**: Bundle containing the final markdown, embedded asset links, manifest, and
   evaluation report for delivery to the user.
 
