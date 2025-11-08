@@ -1,1 +1,4 @@
 .codex/auth.json
+.codex/log/
+.codex/history.jsonl
+.codex/sessions/
