@@ -197,20 +197,20 @@ No violations detected; Complexity Tracking remains empty.
 
 ## Phase 3 – User Story 1 (Researcher Conversion MVP)
 
-- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation, markdown writer, manifest + checksum enforcement.
-- **Tests first**: T014–T019 + T065 cover CLI, GROBID client/cache reuse, rasterizer, manifest checksums, and end-to-end flow with mocked adapters.
-- **Exit criteria**: Integration test proves PDF→markdown pipeline, telemetry hooks stay green, and manifest checksum verification blocks tampered output.
+- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation (with OCR correction logging surfaced to manifest + logs), markdown writer, and checksum enforcement.
+- **Tests first**: T014–T019 + T065 + T066 cover CLI, GROBID client/cache reuse, rasterizer, reconciler logging, manifest checksums, and end-to-end flow with mocked adapters.
+- **Exit criteria**: Integration test proves PDF→markdown pipeline, telemetry hooks stay green, correction logs are persisted/readable, README/docs explain OCR overrides (Principle V), and manifest checksum verification blocks tampered output.
 - **Edge-case handling**: Large-PDF streaming + fixture/documentation tasks (T056, T060, T061) are part of this phase so MVP already honors the memory guarantees from the spec.
 
 ## Phase 4 – User Story 2 (Asset & Equation Catalog)
 
-- **Scope**: Qwen3-VL asset detection, OCR reconciliation, AssetCatalog/EquationRef models, multi-page figure stitching, markdown embedding, and regression goldens.
+- **Scope**: Qwen3-VL asset detection, OCR reconciliation, AssetCatalog/EquationRef models, multi-page figure stitching, markdown embedding, regression goldens, and documentation of extraction heuristics (Principle V).
 - **Tests first**: T030–T034 expand adapter coverage; integration suite validates counts, LaTeX fidelity, and stitched assets.
 - **Dependencies**: Builds on Phase 3 outputs and reuses GROBID cache + telemetry infrastructure.
 
 ## Phase 5 – User Story 3 (Fidelity Review)
 
-- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, and documentation of interpretation guidance.
+- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, and documentation of interpretation guidance (docs/fidelity-review.md updated per Principle V).
 - **Tests first**: T044–T046 extend unit + integration coverage for evaluation flows, including corruption detection.
 - **Exit criteria**: Verification can run independently, reports persist alongside markdown, and automation scripts cover both convert + verify workflows.
 

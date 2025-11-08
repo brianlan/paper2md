@@ -86,6 +86,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T018 [P] [US1] Add manifest checksum generation tests in `tests/unit/models/test_manifest_checksum.py`
 - [ ] T019 [P] [US1] Add tamper-detection tests ensuring checksum verification rejects altered markdown in `tests/unit/models/test_manifest_checksum.py`
 - [ ] T065 [P] [US1] Add dedicated cache reuse tests ensuring TEI scaffold fetches use `<output>/cache/tei/` with checksum versioning (e.g., `tests/unit/pipeline/test_grobid_cache.py`)
+- [ ] T066 [P] [US1] Add reconciler logging tests in `tests/unit/pipeline/test_reconciler_logging.py` to assert OCR vs. TEI corrections write structured logs + manifest entries
 
 ### Implementation for User Story 1
 
@@ -99,12 +100,14 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T027 [US1] Add checksum generation + verification hooks in `src/paper2md/models/manifest.py`
 - [ ] T028 [US1] Enforce checksum verification before delivering outputs in `src/paper2md/services/storage.py`
 - [ ] T029 [US1] Update integration test to assert section structure and checksum verification in `tests/integration/test_end_to_end.py`
+- [ ] T067 [US1] Instrument `src/paper2md/pipeline/reconciler.py` and manifest models to record OCR vs. TEI corrections with page/section metadata and surface them in logs/manifests
+- [ ] T068 [US1] Update `README.md` and `docs/cli-behavior.md` with rationale for OCR overrides, checksum enforcement, and streaming guarantees (Principle V)
 
 ### Large-PDF Streaming (MVP Scope)
 
-- [ ] T056 [P] Optimize rasterization/VLM batching for large PDFs (>100 pages) while preserving memory caps and documenting tradeoffs inline
-- [ ] T060 [P] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
-- [ ] T061 [P] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
+- [ ] T056 [P] [US1] Optimize rasterization/VLM batching for large PDFs (>100 pages) while preserving memory caps and documenting tradeoffs inline
+- [ ] T060 [P] [US1] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
+- [ ] T061 [P] [US1] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -135,6 +138,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T041 [US2] Enhance manifest warnings/logging when counts mismatch TEI or multi-page merges occur in `src/paper2md/cli.py`
 - [ ] T042 [US2] Generate regression fixtures (images + LaTeX) under `tests/data/goldens/assets/`
 - [ ] T043 [US2] Update integration tests to compare runtime manifest/asset outputs to goldens for counts and LaTeX accuracy
+- [ ] T069 [US2] Document asset/equation extraction heuristics and rationale in `docs/fidelity-review.md` + manifest comments (Principle V)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -170,10 +174,10 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] T053 [P] Add structured logging + progress reporting to `src/paper2md/cli.py` and `pipeline/orchestrator.py`
-- [ ] T055 [P] Improve documentation (`README.md`, `quickstart.md`, `docs/cli-behavior.md`) with rationale + troubleshooting
+- [ ] T055 [P] Improve documentation (`README.md`, `quickstart.md`, `docs/cli-behavior.md`) with rationale + troubleshooting (post-story polish)
 - [ ] T057 [P] Conduct performance run on 20-page paper, record metrics in `docs/perf-report.md`
 - [ ] T058 [P] Add telemetry hooks or manifest flags for unresolved OCR vs. TEI conflicts
-- [ ] T059 Ensure intent-focused comments/ADRs capture reconciliation and evaluation heuristics
+- [ ] T059 Ensure intent-focused comments/ADRs capture reconciliation and evaluation heuristics (Principle V reinforcement)
 
 ---
 
