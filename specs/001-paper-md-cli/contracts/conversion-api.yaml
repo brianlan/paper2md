@@ -1,0 +1,143 @@
+openapi: 3.0.3
+info:
+  title: Paper-to-Markdown Conversion Service
+  version: 0.1.0
+  description: >
+    Internal contract mirroring the CLI pipeline so downstream tooling could invoke conversions
+    programmatically. Not exposed publicly but documents inputs/outputs and manifests.
+servers:
+  - url: http://localhost:5050
+    description: Local loopback when wrapping the CLI
+paths:
+  /api/conversions:
+    post:
+      summary: Start a new conversion job
+      operationId: startConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartConversionRequest'
+      responses:
+        '202':
+          description: Conversion accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionJob'
+  /api/conversions/{jobId}:
+    get:
+      summary: Fetch conversion job status and manifest link
+      operationId: getConversion
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job state snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionJob'
+        '404':
+          description: Unknown job
+  /api/conversions/{jobId}/evaluation:
+    post:
+      summary: Trigger fidelity evaluation rerun for an existing markdown package
+      operationId: recheckEvaluation
+      parameters:
+        - in: path
+          name: jobId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Evaluation rerun completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluationReport'
+        '409':
+          description: Conversion not finished yet
+components:
+  schemas:
+    StartConversionRequest:
+      type: object
+      required: [pdfPath, outputDir]
+      properties:
+        pdfPath:
+          type: string
+          description: Absolute path to the source PDF
+        outputDir:
+          type: string
+          description: Directory for markdown + artifacts
+        overwrite:
+          type: boolean
+          default: false
+          description: Whether to delete existing contents in outputDir
+    ConversionJob:
+      type: object
+      required: [jobId, status, pdfPath, outputDir]
+      properties:
+        jobId:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, succeeded, failed]
+        pdfPath:
+          type: string
+        outputDir:
+          type: string
+        envCheck:
+          type: string
+          enum: [pass, warn, fail]
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        manifestPath:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+    EvaluationReport:
+      type: object
+      required: [jobId, structureScore, assetScore, equationScore]
+      properties:
+        jobId:
+          type: string
+        structureScore:
+          type: number
+          format: float
+          description: 0-1 alignment score for headings/layout
+        assetScore:
+          type: number
+          format: float
+          description: 0-1 alignment score for figures/tables/algorithms
+        equationScore:
+          type: number
+          format: float
+        discrepancies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Discrepancy'
+    Discrepancy:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [structure, figure, table, algorithm, equation]
+        description:
+          type: string
+        pageNumber:
+          type: integer
+        suggestion:
+          type: string
