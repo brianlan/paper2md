@@ -143,6 +143,8 @@ markdown without altering the conversion output.
   generated content.
 - **FR-010**: Automation hooks MUST exist (`make test` or equivalent) to run deterministic regression
   tests covering PDF ingestion, asset counts, and evaluation reporting using fixture documents.
+- **FR-011**: The manifest MUST record a cryptographic checksum of the markdown output and verify the
+  checksum whenever the package is read or delivered.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -169,7 +171,7 @@ markdown without altering the conversion output.
 - **SC-002**: Figures, tables, algorithms, and equations extracted per run match the counts reported
   by the evaluation report within a tolerance of zero missing items.
 - **SC-003**: At least 95% of equations in validation PDFs are rendered with mathematically identical
-  LaTeX (spot-checked via automated symbol comparison).
+  LaTeX (validated via automated comparison tests against golden fixtures).
 - **SC-004**: The entire CLI workflow completes within 10 minutes for a 20-page paper on reference
   hardware, including the fidelity evaluation step.
 

@@ -6,14 +6,14 @@
    ```bash
    conda activate /ssd4/envs/llm_py310_torch271_cu128
    ```
-3. Install project dependencies (once the CLI package exists):
+3. Install project dependencies with Poetry (once the CLI package exists):
    ```bash
-   pip install -e .[dev]
+   poetry install
    ```
 
 ## 2. Run a Conversion
 ```bash
-paper2md convert \
+poetry run paper2md convert \
   --pdf /home/rlan/Downloads/streampetr.pdf \
   --output ./output/streampetr \
   --overwrite

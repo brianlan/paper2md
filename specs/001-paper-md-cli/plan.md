@@ -28,6 +28,7 @@ manual QA.
 **Testing**: pytest with pytest-mock + golden fixtures  
 **Target Platform**: Linux workstation with GPU access (same host as models/GROBID)  
 **Project Type**: Single-project CLI (`src/paper2md/...`)  
+**Tooling**: Poetry for dependency management and scripts (`poetry run ...`)  
 **Performance Goals**: Convert a 20-page paper including audit in ≤10 minutes; per-page processing ≤30 s  
 **Constraints**: Must run inside prescribed conda env, offline (local services only), memory-aware streaming for >100 pages  
 **Scale/Scope**: Single concurrent conversion per invocation; designed for batch scripting but not multi-tenant service
@@ -140,6 +141,10 @@ Design Highlights:
 2. **Data validation** ensures asset counts match TEI and manifest includes checksums.
 3. **CLI UX** remains single command with explicit arguments; manifest stores warnings for figure/table mismatches.
 4. **Testing layout** distinguishes unit adapters from integration runs with fixture PDFs.
+5. **Multi-page figures**: US2 tasks introduce detection + stitching logic plus regression fixtures so multi-page assets stay intact.
+6. **Equation fidelity**: Dedicated LaTeX comparison tests enforce the 95% accuracy success criterion.
+7. **Checksum verification**: Manifest hooks and storage checks ensure tampering is detected before outputs leave the CLI.
+8. **Large-PDF streaming tests**: Polish phase adds >100-page stress tests documenting per-page processing and memory targets.
 
 ## Constitution Check (Post-Design)
 

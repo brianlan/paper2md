@@ -70,6 +70,7 @@
   - `markdown_path` (string): Primary `.md` output.
   - `assets_dir` (string): Relative path storing figures/tables/algorithms/equations images.
   - `manifest_path` (string): JSON summary of counts, mapping, warnings.
+  - `markdown_checksum` (string): Cryptographic hash (e.g., SHA-256) of the markdown file for integrity verification.
   - `evaluation_report` (string): Path to fidelity review JSON.
   - `section_outline` (ordered list): Derived from TEI, each node containing heading, level,
     source page range, and reconciled text hash for regression tests.
@@ -77,4 +78,4 @@
   - Consumes `AssetCatalog`, `LayoutPage`, and `EquationRef` data when rendering markdown.
 - **Validation Rules**:
   - `section_outline` must match TEI order exactly.
-  - Manifest must include checksum of markdown for downstream integrity checks.
+  - Manifest must include and validate the markdown checksum for downstream integrity checks.
