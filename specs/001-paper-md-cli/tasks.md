@@ -50,8 +50,21 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T011 Create baseline integration fixture PDF setup under `tests/data/sample_papers/streampetr/`
 - [ ] T012 Author initial golden manifest/evaluation JSON examples under `tests/data/goldens/`
 - [ ] T013 Add contract for CLI exit codes + logging conventions in `docs/cli-behavior.md`
+- [ ] T054 [P] Harden error handling specifically for GROBID/model outages with simulated fault tests in adapters (must pass before any user story code)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+
+---
+
+## Phase 2b: Observability & Telemetry (Pre-Story Gate)
+
+**Purpose**: Instrumentation mandated by NFR-001/NFR-002 must exist before any user story begins
+
+- [ ] T062 [P] Add `tests/integration/test_perf_timings.py` that records per-page durations, fails if any page exceeds 30 s, and updates `docs/perf-report.md` with the captured SLA data
+- [ ] T063 [P] Instrument `src/paper2md/pipeline/orchestrator.py` to log per-page start/end timestamps + metrics and persist them to the manifest/logs; add pytest coverage ensuring timings exist
+- [ ] T064 [P] Propagate correlation IDs (`job_id`/`page_id`) through adapters (`grobid.py`, `vlm_extractor.py`, `ocr.py`) and assert structured logs contain them via new tests in `tests/unit/pipeline/test_logging.py`
+
+**Checkpoint**: Telemetry + perf automation green — proceed to User Story phases only after this point
 
 ---
 
@@ -67,16 +80,17 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 > external dependency so the suite runs deterministically.
 
 - [ ] T014 [P] [US1] Add CLI smoke test in `tests/unit/test_cli.py` ensuring argument parsing and env guard rails
-- [ ] T015 [P] [US1] Create GROBID client contract tests with mocked `requests` in `tests/unit/pipeline/test_grobid.py`
+- [ ] T015 [P] [US1] Create GROBID client contract tests with mocked `requests` in `tests/unit/pipeline/test_grobid.py`, covering cache hit/miss behavior and failure retries
 - [ ] T016 [P] [US1] Add rasterizer unit tests covering 300 DPI output in `tests/unit/pipeline/test_rasterizer.py`
 - [ ] T017 [P] [US1] Expand integration test `tests/integration/test_end_to_end.py` for baseline PDF→markdown flow (mock VLM/OCR)
 - [ ] T018 [P] [US1] Add manifest checksum generation tests in `tests/unit/models/test_manifest_checksum.py`
 - [ ] T019 [P] [US1] Add tamper-detection tests ensuring checksum verification rejects altered markdown in `tests/unit/models/test_manifest_checksum.py`
+- [ ] T065 [P] [US1] Add dedicated cache reuse tests ensuring TEI scaffold fetches use `<output>/cache/tei/` with checksum versioning (e.g., `tests/unit/pipeline/test_grobid_cache.py`)
 
 ### Implementation for User Story 1
 
 - [ ] T020 [US1] Implement env validation + CLI argument handling in `src/paper2md/cli.py`
-- [ ] T021 [US1] Flesh out `src/paper2md/pipeline/grobid.py` to call `http://localhost:8070` and persist TEI XML
+- [ ] T021 [US1] Flesh out `src/paper2md/pipeline/grobid.py` to call `http://localhost:8070`, persist TEI XML, manage `<output>/cache/tei/`, and invalidate caches when checksums or GROBID versions change
 - [ ] T022 [US1] Implement `src/paper2md/pipeline/rasterizer.py` to stream PDF pages into `output/pages/page-###.png`
 - [ ] T023 [US1] Build scaffold-merging module `src/paper2md/pipeline/reconciler.py` to marry TEI headings with placeholder text nodes
 - [ ] T024 [US1] Implement orchestrator sequencing in `src/paper2md/pipeline/orchestrator.py` to run stages in order
@@ -85,6 +99,12 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T027 [US1] Add checksum generation + verification hooks in `src/paper2md/models/manifest.py`
 - [ ] T028 [US1] Enforce checksum verification before delivering outputs in `src/paper2md/services/storage.py`
 - [ ] T029 [US1] Update integration test to assert section structure and checksum verification in `tests/integration/test_end_to_end.py`
+
+### Large-PDF Streaming (MVP Scope)
+
+- [ ] T056 [P] Optimize rasterization/VLM batching for large PDFs (>100 pages) while preserving memory caps and documenting tradeoffs inline
+- [ ] T060 [P] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
+- [ ] T061 [P] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -145,29 +165,15 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 
 ---
 
-## Phase 2b: Observability & Telemetry (Foundational Extension)
-
-**Purpose**: Instrument timing + logging guarantees required by NFR-001/NFR-002 before user stories begin
-
-- [ ] T062 [P] Add `tests/integration/test_perf_timings.py` that records per-page durations, fails if any page exceeds 30 s, and updates `docs/perf-report.md` with the captured SLA data
-- [ ] T063 [P] Instrument `src/paper2md/pipeline/orchestrator.py` to log per-page start/end timestamps + metrics and persist them to the manifest/logs; add pytest coverage ensuring timings exist
-- [ ] T064 [P] Propagate correlation IDs (`job_id`/`page_id`) through adapters (`grobid.py`, `vlm_extractor.py`, `ocr.py`) and assert structured logs contain them via new tests in `tests/unit/pipeline/test_logging.py`
-
----
-
 ## Phase N: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] T053 [P] Add structured logging + progress reporting to `src/paper2md/cli.py` and `pipeline/orchestrator.py`
-- [ ] T054 [P] Harden error handling specifically for GROBID/model outages with simulated fault tests in adapters
 - [ ] T055 [P] Improve documentation (`README.md`, `quickstart.md`, `docs/cli-behavior.md`) with rationale + troubleshooting
-- [ ] T056 [P] Optimize rasterization/VLM batching for large PDFs (>100 pages) while preserving memory caps
 - [ ] T057 [P] Conduct performance run on 20-page paper, record metrics in `docs/perf-report.md`
 - [ ] T058 [P] Add telemetry hooks or manifest flags for unresolved OCR vs. TEI conflicts
 - [ ] T059 Ensure intent-focused comments/ADRs capture reconciliation and evaluation heuristics
-- [ ] T060 [P] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
-- [ ] T061 [P] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
 
 ---
 
@@ -177,7 +183,8 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+- **Phase 2b (Telemetry)**: Depends on Foundational completion - BLOCKS all user stories until per-page metrics + correlation logging exist
+- **User Stories (Phase 3+)**: All depend on Foundational + Phase 2b completion
   - User stories can then proceed in parallel (if staffed)
   - Or sequentially in priority order (P1 → P1 → P2)
 - **Polish (Final Phase)**: Depends on all desired user stories being complete
@@ -187,6 +194,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
 - **User Story 2 (P1)**: Builds on US1 outputs and requires asset/equation infrastructure; otherwise independent logic
 - **User Story 3 (P2)**: Depends on US1 + US2 outputs existing to compare against
+- **Large-PDF streaming tasks (T056, T060, T061)**: Treated as part of US1 MVP; must pass before moving to US2
 
 ### Within Each User Story
 

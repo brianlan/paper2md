@@ -33,6 +33,20 @@ trust the conversion without manual QA.
 **Constraints**: Must run inside prescribed conda env (fail fast if mismatched), offline (local services only), memory-aware streaming for >100 pages  
 **Scale/Scope**: Single concurrent conversion per invocation; designed for batch scripting but not multi-tenant service
 
+### Performance & Streaming Strategy
+
+- **Streaming-first pipeline**: Rasterizer processes one page at a time, writing 300 DPI images to disk and discarding intermediate buffers to satisfy the “hundreds of pages” edge case.
+- **Batch-size guardrails**: VLM/OCR adapters accept configurable page batches (default = 1) and enforce GPU memory ceilings; exceeding limits downgrades to single-page processing with warning logs.
+- **Perf instrumentation**: The orchestrator records per-page start/end timestamps plus duration metrics that feed both logs and `docs/perf-report.md`.
+- **Regression artifacts**: Large-PDF fixture (`tests/data/sample_papers/streaming_100p/`) and performance scripts keep SLA measurements reproducible.
+
+### Caching Strategy
+
+- **Scope**: TEI XML cache is scoped per conversion job (output directory) but leverages checksum-based reuse when the same input PDF is processed multiple times.
+- **Location**: Cached scaffolds live under `<output>/cache/tei/` with filenames derived from the PDF checksum to avoid collisions.
+- **Invalidation**: Any change to the input PDF or GROBID version triggers a new fetch; stale cache entries include metadata (checksum + grobid_version) so tests can verify invalidation.
+- **Test coverage**: `tests/unit/pipeline/test_grobid.py` gains cache hit/miss scenarios, and contract docs describe operational expectations for cache persistence.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -60,6 +74,15 @@ specs/[###-feature]/
 ├── quickstart.md        # Phase 1 output (/speckit.plan command)
 ├── contracts/           # Phase 1 output (/speckit.plan command)
 └── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+```
+
+### Docs & Operational Guides
+
+```text
+docs/
+├── cli-behavior.md      # Exit codes, env checks, logging conventions
+├── fidelity-review.md   # Evaluation workflow + report interpretation
+└── perf-report.md       # SLA metrics, perf fixture results, streaming data
 ```
 
 ### Source Code (repository root)
@@ -158,3 +181,41 @@ Design Highlights:
 - `Explain the why`: research.md and inline comments planned for reconciliation decisions—PASS.
 
 No violations detected; Complexity Tracking remains empty.
+
+## Phase 2 – Foundational Build
+
+- **Goal**: Lock in automation scaffolding, fixtures, and blocking tests before any user story code ships.
+- **Deliverables**: pytest layout (`tests/unit`, `tests/integration`), baseline fixtures, orchestrator/storage unit tests, CLI behavior contract (`docs/cli-behavior.md`), and checksum manifest schemas.
+- **Gates**: Tests in T009–T013 + outage handling (T054) must fail first, CI automation (`make lint`, `make test`) must be runnable locally, and constitution principles I–III are re-asserted via readable module boundaries + TDD evidence.
+- **Dependencies**: Completes after Phase 1; prerequisite for telemetry and every user story.
+
+## Phase 2b – Observability & Telemetry (Pre-Story Gate)
+
+- **Goal**: Satisfy NFR-001/002 before feature work by instrumenting per-page metrics, correlation IDs, and SLA tests.
+- **Deliverables**: Telemetry tests (`tests/integration/test_perf_timings.py`, `tests/unit/pipeline/test_logging.py`), orchestrator instrumentation (T062–T064), and perf-report documentation with captured metrics.
+- **Gate**: User Story phases may not start until telemetry tests fail/pass cycle is complete; ensures Principle III (“Relentless Automation”) remains enforceable.
+
+## Phase 3 – User Story 1 (Researcher Conversion MVP)
+
+- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation, markdown writer, manifest + checksum enforcement.
+- **Tests first**: T014–T019 + T065 cover CLI, GROBID client/cache reuse, rasterizer, manifest checksums, and end-to-end flow with mocked adapters.
+- **Exit criteria**: Integration test proves PDF→markdown pipeline, telemetry hooks stay green, and manifest checksum verification blocks tampered output.
+- **Edge-case handling**: Large-PDF streaming + fixture/documentation tasks (T056, T060, T061) are part of this phase so MVP already honors the memory guarantees from the spec.
+
+## Phase 4 – User Story 2 (Asset & Equation Catalog)
+
+- **Scope**: Qwen3-VL asset detection, OCR reconciliation, AssetCatalog/EquationRef models, multi-page figure stitching, markdown embedding, and regression goldens.
+- **Tests first**: T030–T034 expand adapter coverage; integration suite validates counts, LaTeX fidelity, and stitched assets.
+- **Dependencies**: Builds on Phase 3 outputs and reuses GROBID cache + telemetry infrastructure.
+
+## Phase 5 – User Story 3 (Fidelity Review)
+
+- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, and documentation of interpretation guidance.
+- **Tests first**: T044–T046 extend unit + integration coverage for evaluation flows, including corruption detection.
+- **Exit criteria**: Verification can run independently, reports persist alongside markdown, and automation scripts cover both convert + verify workflows.
+
+## Phase N – Polish & Quality Gates
+
+- **Scope**: Structured logging polish, documentation enhancements, performance runs on reference hardware, telemetry annotations, and ADR/comment hygiene.
+- **Key moves**: Logging UX (T053), doc/tooling polish (T055), perf reporting (T057), OCR/TEI telemetry (T058), and rationale capture (T059) round out the release once core stories ship.
+- **Dependencies**: Execute after primary user stories but continue to honor telemetry + automation gates; performance reports are updated once SLA runs complete.
