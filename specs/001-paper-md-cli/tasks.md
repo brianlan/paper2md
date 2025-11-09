@@ -87,6 +87,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T019 [P] [US1] Add tamper-detection tests ensuring checksum verification rejects altered markdown in `tests/unit/models/test_manifest_checksum.py`
 - [ ] T065 [P] [US1] Add dedicated cache reuse tests ensuring TEI scaffold fetches use `<output>/cache/tei/` with checksum versioning (e.g., `tests/unit/pipeline/test_grobid_cache.py`)
 - [ ] T066 [P] [US1] Add reconciler logging tests in `tests/unit/pipeline/test_reconciler_logging.py` to assert OCR vs. TEI corrections write structured logs + manifest entries
+- [ ] T070 [P] [US1] Add markdown writer tests in `tests/unit/services/test_markdown_writer.py` asserting asset captions and correction summaries embed into sections
 
 ### Implementation for User Story 1
 
@@ -102,6 +103,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T029 [US1] Update integration test to assert section structure and checksum verification in `tests/integration/test_end_to_end.py`
 - [ ] T067 [US1] Instrument `src/paper2md/pipeline/reconciler.py` and manifest models to record OCR vs. TEI corrections with page/section metadata and surface them in logs/manifests
 - [ ] T068 [US1] Update `README.md` and `docs/cli-behavior.md` with rationale for OCR overrides, checksum enforcement, and streaming guarantees (Principle V)
+- [ ] T072 [US1] Implement `--purge-cache` handling in `src/paper2md/cli.py` + storage helpers, deleting `<output>/cache/tei` when requested and documenting behavior
 
 ### Large-PDF Streaming (MVP Scope)
 
@@ -155,6 +157,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T044 [P] [US3] Add evaluation service unit tests with mocked VLM comparison outputs in `tests/unit/services/test_evaluation.py`
 - [ ] T045 [P] [US3] Create CLI option test ensuring verification runs independently via `tests/unit/test_cli.py`
 - [ ] T046 [P] [US3] Extend integration test to corrupt markdown intentionally and assert discrepancies appear in `tests/integration/test_end_to_end.py`
+- [ ] T071 [P] [US3] Add docs lint/check in `tests/unit/test_docs_fidelity.py` verifying `docs/fidelity-review.md` explains current evaluation heuristics (Principle V)
 
 ### Implementation for User Story 3
 

@@ -45,6 +45,7 @@ trust the conversion without manual QA.
 - **Scope**: TEI XML cache is scoped per conversion job (output directory) but leverages checksum-based reuse when the same input PDF is processed multiple times.
 - **Location**: Cached scaffolds live under `<output>/cache/tei/` with filenames derived from the PDF checksum to avoid collisions.
 - **Invalidation**: Any change to the input PDF or GROBID version triggers a new fetch; stale cache entries include metadata (checksum + grobid_version) so tests can verify invalidation.
+- **Retention**: By default caches persist within the output package for auditability, but the CLI exposes `--purge-cache` to delete `<output>/cache/tei` once artifacts are consumed; tasks cover both behaviors plus documentation of operational guidance.
 - **Test coverage**: `tests/unit/pipeline/test_grobid.py` gains cache hit/miss scenarios, and contract docs describe operational expectations for cache persistence.
 
 ## Constitution Check
@@ -197,8 +198,8 @@ No violations detected; Complexity Tracking remains empty.
 
 ## Phase 3 – User Story 1 (Researcher Conversion MVP)
 
-- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation (with OCR correction logging surfaced to manifest + logs), markdown writer, and checksum enforcement.
-- **Tests first**: T014–T019 + T065 + T066 cover CLI, GROBID client/cache reuse, rasterizer, reconciler logging, manifest checksums, and end-to-end flow with mocked adapters.
+- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation (with OCR correction logging surfaced to manifest + logs), markdown writer (embedding asset captions + correction summaries), and checksum enforcement.
+- **Tests first**: T014–T019 + T065 + T066 + T070 cover CLI, GROBID client/cache reuse, rasterizer, reconciler logging, markdown embedding, manifest checksums, and end-to-end flow with mocked adapters.
 - **Exit criteria**: Integration test proves PDF→markdown pipeline, telemetry hooks stay green, correction logs are persisted/readable, README/docs explain OCR overrides (Principle V), and manifest checksum verification blocks tampered output.
 - **Edge-case handling**: Large-PDF streaming + fixture/documentation tasks (T056, T060, T061) are part of this phase so MVP already honors the memory guarantees from the spec.
 
@@ -210,8 +211,8 @@ No violations detected; Complexity Tracking remains empty.
 
 ## Phase 5 – User Story 3 (Fidelity Review)
 
-- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, and documentation of interpretation guidance (docs/fidelity-review.md updated per Principle V).
-- **Tests first**: T044–T046 extend unit + integration coverage for evaluation flows, including corruption detection.
+- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, and documentation of interpretation guidance (docs/fidelity-review.md updated per Principle V plus automated docs lint).
+- **Tests first**: T044–T046 + T071 extend unit + integration coverage for evaluation flows, including corruption detection and doc drift prevention.
 - **Exit criteria**: Verification can run independently, reports persist alongside markdown, and automation scripts cover both convert + verify workflows.
 
 ## Phase N – Polish & Quality Gates
