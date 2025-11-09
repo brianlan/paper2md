@@ -1,188 +1,175 @@
-# Tasks: Paper-to-Markdown CLI
+# Tasks: 001-paper-md-cli
 
 **Input**: Design documents from `/specs/001-paper-md-cli/`
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/
 
-**Tests**: TDD-first is non-negotiable. Every story MUST list the tests that will be written (and fail)
-before implementation. If a spec explicitly forbids tests, call it out as a risk and get approval.
+**Tests**: Every story lists the pytest modules that must be written (and fail) before implementation per constitution TDD mandate.
 
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
-
-> Include automation (lint/test/docs scripts) and rationale/comment updates as first-class tasks so
-> reviewers can trace compliance with the constitution.
+**Organization**: Tasks are grouped by user story so each slice can be implemented, tested, and delivered independently.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
-- Include exact file paths in descriptions
+- **[P]**: Task can run in parallel (different files, no dependency ordering)
+- **[Story]**: Applies only to user story phases (e.g., [US1])
+- Include exact file paths for every task
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- Source: `src/paper2md/`
+- Tests: `tests/`
+- Docs: `docs/`, `README.md`, `quickstart.md`
+- Data fixtures: `tests/data/`
+
+---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and basic structure
+**Purpose**: Establish project skeleton, tooling, and documentation references.
 
-- [ ] T001 Initialize Typer-based CLI package skeleton in `src/paper2md/__init__.py` and `src/paper2md/cli.py`
-- [ ] T002 Configure Poetry project metadata and editable install workflow in `pyproject.toml`
-- [ ] T003 Add reproduction scripts `Makefile` targets (`make lint`, `make test`, `make format`)
-- [ ] T004 [P] Create `src/paper2md/config.py` to load env vars (GROBID URL, model paths) with pydantic settings
-- [ ] T005 [P] Bootstrap test layout under `tests/unit/` and `tests/integration/` with sample fixtures directory
-- [ ] T006 [P] Document run instructions and env checks in `README.md` referencing `quickstart.md`
-- [ ] T007 [P] Pin formatter/linter configs (`ruff.toml`, mypy settings) mirroring automation plan
-- [ ] T008 [P] Add Git pre-commit or CI workflow placeholder ensuring `make test` runs before merges
+- [ ] T001 Create Typer CLI package skeleton in `src/paper2md/__init__.py` and `src/paper2md/cli.py` per plan structure
+- [ ] T002 Configure Poetry project metadata and dependencies in `pyproject.toml` (Typer, pydantic, requests, pdf2image, Pillow, numpy, OpenCV, PyTorch)
+- [ ] T003 Add reproducible automation targets (`make lint`, `make type`, `make test`) in root `Makefile`
+- [ ] T004 [P] Add env/config loader `src/paper2md/config.py` validating `/ssd4/envs/llm_py310_torch271_cu128` and local model paths
+- [ ] T005 [P] Scaffold pytest layout (`tests/unit/`, `tests/integration/`, `tests/data/`) with `conftest.py` stubs and sample fixtures
+- [ ] T006 [P] Document run/setup flow in `README.md` pointing to `quickstart.md`
+- [ ] T007 [P] Pin lint/type settings (`ruff.toml`, `mypy.ini`) and hook them into Poetry scripts
+- [ ] T008 [P] Add CI workflow `.github/workflows/ci.yml` mirroring `make lint/type/test`
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
+**Purpose**: Core infrastructure + failing tests required before any user story work.
 
-**⚠️ CRITICAL**: Tests must exist (and fail) before writing implementation code in this phase
+- [ ] T009 [P] Author orchestrator tests in `tests/unit/pipeline/test_orchestrator.py` covering stage sequencing + failure propagation
+- [ ] T010 [P] Add storage helper tests in `tests/unit/services/test_storage.py` for path creation, atomic writes, and checksum hooks
+- [ ] T011 Create baseline fixture PDF + manifest scaffolding under `tests/data/sample_papers/streampetr/`
+- [ ] T012 Seed golden manifest/evaluation artifacts in `tests/data/goldens/streampetr/`
+- [ ] T013 Define CLI behavior & exit codes in `docs/cli-behavior.md` (env validation, cache purge, checksum failures)
+- [ ] T014 [P] Add manifest checksum generation/verification tests in `tests/unit/models/test_manifest_checksum.py`
+- [ ] T015 Implement checksum stubs + TODO guards in `src/paper2md/models/manifest.py` so tests fail pending story work
+- [ ] T016 [P] Harden outage handling tests in `tests/unit/pipeline/test_grobid_failures.py` simulating GROBID/model downtime
 
-- [ ] T009 [P] Author orchestrator unit tests with mocked adapters in `tests/unit/pipeline/test_orchestrator.py`
-- [ ] T010 [P] Author filesystem storage helper tests in `tests/unit/services/test_storage.py`
-- [ ] T011 Create baseline integration fixture PDF setup under `tests/data/sample_papers/streampetr/`
-- [ ] T012 Author initial golden manifest/evaluation JSON examples under `tests/data/goldens/`
-- [ ] T013 Add contract for CLI exit codes + logging conventions in `docs/cli-behavior.md`
-- [ ] T054 [P] Harden error handling specifically for GROBID/model outages with simulated fault tests in adapters (must pass before any user story code)
-
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+**Checkpoint**: Foundation is green (tests fail as expected) → proceed to telemetry gate.
 
 ---
 
 ## Phase 2b: Observability & Telemetry (Pre-Story Gate)
 
-**Purpose**: Instrumentation mandated by NFR-001/NFR-002 must exist before any user story begins
+**Purpose**: Enforce NFR-001/NFR-002 before story implementation.
 
-- [ ] T057 [P] Run the 20-page SLA fixture (`tests/data/sample_papers/streampetr/20p/`), capture perf metrics in `docs/perf-report.md`, and fail if the average exceeds 1 minute per page (≤20 minutes total)
-- [ ] T062 [P] Add `tests/integration/test_perf_timings.py` that records per-page durations, fails if any page exceeds 30 s, and updates `docs/perf-report.md` with the captured SLA data
-- [ ] T063 [P] Instrument `src/paper2md/pipeline/orchestrator.py` to log per-page start/end timestamps + metrics and persist them to the manifest/logs; add pytest coverage ensuring timings exist
-- [ ] T064 [P] Propagate correlation IDs (`job_id`/`page_id`) through adapters (`grobid.py`, `vlm_extractor.py`, `ocr.py`) and assert structured logs contain them via new tests in `tests/unit/pipeline/test_logging.py`
+- [ ] T017 [P] Add per-page timing integration suite in `tests/integration/test_perf_timings.py` with assertions for ≤30 s per page
+- [ ] T018 [P] Instrument `src/paper2md/pipeline/orchestrator.py` to emit `TelemetryRecord`s (start/end/duration) and write `telemetry.json`
+- [ ] T019 [P] Propagate correlation IDs (`job_id`, `page_id`) through `src/paper2md/pipeline/grobid.py`, `vlm_extractor.py`, and `ocr.py` with logging assertions in `tests/unit/pipeline/test_logging.py`
+- [ ] T020 Run 20-page SLA fixture `tests/data/sample_papers/streampetr/20p/` via `tests/perf/test_20page_average.py`, failing if average >1 min per page, and persist metrics to `docs/perf-report.md`
+- [ ] T021 [P] Capture telemetry schema + usage docs in `docs/perf-report.md` and manifest comments for future enforcement
 
-**Checkpoint**: Telemetry + perf automation green — proceed to User Story phases only after this point
+**Checkpoint**: Telemetry scripts + SLA run are green → unlock user story work.
 
 ---
 
 ## Phase 3: User Story 1 - Researcher converts a paper to markdown (Priority: P1) 🎯 MVP
 
-**Goal**: Provide an end-to-end CLI command that ingests a PDF, leverages GROBID, rasterizes pages, merges OCR text, and outputs markdown mirroring section hierarchy with verified checksums.
+**Goal**: `paper2md convert` ingests a local PDF, validates env, streams through GROBID + OCR, and outputs markdown + manifest with checksums.
 
-**Independent Test**: Run `poetry run paper2md convert` against `/home/rlan/Downloads/streampetr.pdf`; assert exit code 0, markdown file present, manifest records section ordering, and checksum verification passes before artifacts are returned.
+**Independent Test**: Run `poetry run paper2md convert --pdf <fixture> --output <dir>`; expect exit 0, markdown matching GROBID outline, manifest with section map + checksum verification enforced.
 
 ### Tests for User Story 1 (MANDATORY - write first) ⚠️
 
-> Write these tests FIRST, ensure they FAIL before implementation, and rely on mocks/stubs for every
-> external dependency so the suite runs deterministically.
-
-- [ ] T014 [P] [US1] Add CLI smoke test in `tests/unit/test_cli.py` ensuring argument parsing and env guard rails
-- [ ] T015 [P] [US1] Create GROBID client contract tests with mocked `requests` in `tests/unit/pipeline/test_grobid.py`, covering cache hit/miss behavior and failure retries
-- [ ] T016 [P] [US1] Add rasterizer unit tests covering 300 DPI output in `tests/unit/pipeline/test_rasterizer.py`
-- [ ] T017 [P] [US1] Expand integration test `tests/integration/test_end_to_end.py` for baseline PDF→markdown flow (mock VLM/OCR)
-- [ ] T018 [P] [US1] Add manifest checksum generation tests in `tests/unit/models/test_manifest_checksum.py`
-- [ ] T019 [P] [US1] Add tamper-detection tests ensuring checksum verification rejects altered markdown in `tests/unit/models/test_manifest_checksum.py`
-- [ ] T065 [P] [US1] Add dedicated cache reuse tests ensuring TEI scaffold fetches use `<output>/cache/tei/` with checksum versioning (e.g., `tests/unit/pipeline/test_grobid_cache.py`)
-- [ ] T066 [P] [US1] Add reconciler logging tests in `tests/unit/pipeline/test_reconciler_logging.py` to assert OCR vs. TEI corrections write structured logs + manifest entries
-- [ ] T070 [P] [US1] Add markdown writer tests in `tests/unit/services/test_markdown_writer.py` asserting asset captions and correction summaries embed into sections
+- [ ] T022 [P] [US1] Add CLI env-guard tests in `tests/unit/test_cli.py::test_convert_requires_env`
+- [ ] T023 [P] [US1] Create GROBID client/cache tests in `tests/unit/pipeline/test_grobid.py`
+- [ ] T024 [P] [US1] Add rasterizer streaming/300 DPI tests in `tests/unit/pipeline/test_rasterizer.py`
+- [ ] T025 [P] [US1] Add reconciler logging/correction tests in `tests/unit/pipeline/test_reconciler_logging.py`
+- [ ] T026 [P] [US1] Add markdown writer embedding tests in `tests/unit/services/test_markdown_writer.py`
+- [ ] T027 [P] [US1] Add TEI cache reuse tests in `tests/unit/pipeline/test_grobid_cache.py`
+- [ ] T028 [P] [US1] Extend integration flow `tests/integration/test_convert_end_to_end.py` to assert section ordering + checksum blocking
+- [ ] T029 [P] [US1] Add large-PDF streaming test `tests/integration/test_large_pdf.py` to ensure memory-safe batching
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Implement env validation + CLI argument handling in `src/paper2md/cli.py`
-- [ ] T021 [US1] Flesh out `src/paper2md/pipeline/grobid.py` to call `http://localhost:8070`, persist TEI XML, manage `<output>/cache/tei/`, and invalidate caches when checksums or GROBID versions change
-- [ ] T022 [US1] Implement `src/paper2md/pipeline/rasterizer.py` to stream PDF pages into `output/pages/page-###.png`
-- [ ] T023 [US1] Build scaffold-merging module `src/paper2md/pipeline/reconciler.py` to marry TEI headings with placeholder text nodes
-- [ ] T024 [US1] Implement orchestrator sequencing in `src/paper2md/pipeline/orchestrator.py` to run stages in order
-- [ ] T025 [US1] Generate markdown writer in `src/paper2md/services/markdown_writer.py` embedding section outline
-- [ ] T026 [US1] Emit conversion manifest JSON via `src/paper2md/models/manifest.py` with section/order metadata
-- [ ] T027 [US1] Add checksum generation + verification hooks in `src/paper2md/models/manifest.py`
-- [ ] T028 [US1] Enforce checksum verification before delivering outputs in `src/paper2md/services/storage.py`
-- [ ] T029 [US1] Update integration test to assert section structure and checksum verification in `tests/integration/test_end_to_end.py`
-- [ ] T067 [US1] Instrument `src/paper2md/pipeline/reconciler.py` and manifest models to record OCR vs. TEI corrections with page/section metadata and surface them in logs/manifests
-- [ ] T068 [US1] Update `README.md` and `docs/cli-behavior.md` with rationale for OCR overrides, checksum enforcement, and streaming guarantees (Principle V)
-- [ ] T072 [US1] Implement `--purge-cache` handling in `src/paper2md/cli.py` + storage helpers, deleting `<output>/cache/tei` when requested and documenting behavior
+- [ ] T030 [US1] Implement env validation + convert command wiring in `src/paper2md/cli.py`
+- [ ] T031 [US1] Flesh out config validation + helpful errors in `src/paper2md/config.py`
+- [ ] T032 [US1] Implement GROBID client with TEI cache + purge flag in `src/paper2md/pipeline/grobid.py`
+- [ ] T033 [US1] Build pdf2image rasterizer with deterministic filenames in `src/paper2md/pipeline/rasterizer.py`
+- [ ] T034 [US1] Implement OCR/TEI reconciler scaffold (without asset placement) in `src/paper2md/pipeline/reconciler.py`
+- [ ] T035 [US1] Orchestrate pipeline stages + error handling in `src/paper2md/pipeline/orchestrator.py`
+- [ ] T036 [US1] Implement markdown writer baseline in `src/paper2md/services/markdown_writer.py`
+- [ ] T037 [US1] Finalize manifest schema + checksum generation/verification in `src/paper2md/models/manifest.py`
+- [ ] T038 [US1] Enforce checksum verification before delivery in `src/paper2md/services/storage.py`
+- [ ] T039 [US1] Update CLI/documentation (`README.md`, `docs/cli-behavior.md`) with convert usage, cache purge, checksum rationale
+- [ ] T040 [US1] Document streaming guarantees + results in `docs/perf-report.md`
 
-### Large-PDF Streaming (MVP Scope)
-
-- [ ] T056 [P] [US1] Optimize rasterization/VLM batching for large PDFs (>100 pages) while preserving memory caps and documenting tradeoffs inline
-- [ ] T060 [P] [US1] Build >100-page fixture and streaming integration test in `tests/integration/test_large_pdf.py` to assert page-by-page processing stays within memory targets
-- [ ] T061 [P] [US1] Document streaming test results and thresholds in `docs/perf-report.md` and reference mitigation strategies
-
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+**Checkpoint**: `paper2md convert` stands alone—markdown + manifest produced with verified checksum.
 
 ---
 
 ## Phase 4: User Story 2 - Analyst catalogues visual assets and equations (Priority: P1)
 
-**Goal**: Extract all figures, tables, algorithms, and equations with correct numbering, captions, crops, LaTeX, and multi-page handling, embedding them into the markdown package.
+**Goal**: Extract figures/tables/algorithms/equations with correct numbering, captions, crops, and embed them into markdown + manifest.
 
-**Independent Test**: Run CLI against fixture PDF containing known counts, multi-page figures, and ground-truth equations; verify manifest counts match, stitched figures exist, equations renderable in markdown, and LaTeX accuracy ≥95%.
+**Independent Test**: Run convert on asset-rich fixture; manifest counts match TEI, stitched multi-page figures persist, equations renderable with ≥95% accuracy via automated comparison.
 
 ### Tests for User Story 2 (MANDATORY - write first) ⚠️
 
-- [ ] T030 [P] [US2] Add VLM extractor contract tests with stub Qwen responses in `tests/unit/pipeline/test_vlm_extractor.py`
-- [ ] T031 [P] [US2] Create OCR reconciliation tests in `tests/unit/pipeline/test_ocr.py` for column detection accuracy
-- [ ] T032 [P] [US2] Add AssetCatalog validation tests ensuring counts and caption numbering in `tests/unit/models/test_manifest_assets.py`
-- [ ] T033 [P] [US2] Add LaTeX fidelity tests comparing extracted equations to goldens in `tests/unit/models/test_equations.py`
-- [ ] T034 [P] [US2] Extend integration test to cover asset counts, multi-page figures, and LaTeX accuracy in `tests/integration/test_end_to_end.py`
+- [ ] T041 [P] [US2] Add VLM extractor contract tests in `tests/unit/pipeline/test_vlm_extractor.py`
+- [ ] T042 [P] [US2] Add OCR column-ordering tests in `tests/unit/pipeline/test_ocr.py`
+- [ ] T043 [P] [US2] Add AssetCatalog numbering/count tests in `tests/unit/models/test_manifest_assets.py`
+- [ ] T044 [P] [US2] Add LaTeX fidelity tests in `tests/unit/models/test_equations.py`
+- [ ] T045 [P] [US2] Extend integration test in `tests/integration/test_convert_end_to_end.py` to assert asset/equation outputs vs goldens
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] Implement `src/paper2md/pipeline/vlm_extractor.py` to call `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` per page and save crops
-- [ ] T036 [US2] Build `src/paper2md/pipeline/ocr.py` to run `/ssd4/models/Qwen/Qwen3-VL-8B-Instruct-FP8` in OCR mode and emit ordered text blocks
-- [ ] T037 [US2] Extend `src/paper2md/pipeline/reconciler.py` to merge OCR content with TEI scaffold and insert figure/table placeholders
-- [ ] T038 [US2] Implement `src/paper2md/models/manifest.py` AssetCatalog + EquationRef serialization with numbering and LaTeX sources
-- [ ] T039 [US2] Update markdown writer to embed figures/tables/algorithms and equations with captions/LaTeX
-- [ ] T040 [US2] Implement multi-page figure detection and stitching logic in `src/paper2md/pipeline/vlm_extractor.py`
-- [ ] T041 [US2] Enhance manifest warnings/logging when counts mismatch TEI or multi-page merges occur in `src/paper2md/cli.py`
-- [ ] T042 [US2] Generate regression fixtures (images + LaTeX) under `tests/data/goldens/assets/`
-- [ ] T043 [US2] Update integration tests to compare runtime manifest/asset outputs to goldens for counts and LaTeX accuracy
-- [ ] T069 [US2] Document asset/equation extraction heuristics and rationale in `docs/fidelity-review.md` + manifest comments (Principle V)
+- [ ] T046 [US2] Implement Qwen3-VL asset extractor in `src/paper2md/pipeline/vlm_extractor.py`
+- [ ] T047 [US2] Implement OCR adapter for ordered text blocks in `src/paper2md/pipeline/ocr.py`
+- [ ] T048 [US2] Extend reconciler to insert asset placeholders + references in `src/paper2md/pipeline/reconciler.py`
+- [ ] T049 [US2] Serialize AssetCatalog + EquationRef data in `src/paper2md/models/manifest.py`
+- [ ] T050 [US2] Embed figures/tables/equations with captions + LaTeX in `src/paper2md/services/markdown_writer.py`
+- [ ] T051 [US2] Implement multi-page figure stitching + bounding-box aggregation in `src/paper2md/pipeline/vlm_extractor.py`
+- [ ] T052 [US2] Surface mismatch warnings/logs in `src/paper2md/cli.py` and manifest anomalies
+- [ ] T053 [US2] Create regression goldens (images + LaTeX) under `tests/data/goldens/assets/`
+- [ ] T054 [US2] Document extraction heuristics + rationale in `docs/fidelity-review.md`
 
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+**Checkpoint**: Markdown now embeds assets/equations accurately; manifest counts align with TEI.
 
 ---
 
 ## Phase 5: User Story 3 - Reviewer audits fidelity (Priority: P2)
 
-**Goal**: Automatically evaluate the generated markdown against the original PDF using Qwen3-VL to produce a structured fidelity report saved with the package.
+**Goal**: `paper2md verify` reloads packages, re-validates checksums, runs VLM-based fidelity scoring, and stores discrepancy reports.
 
-**Independent Test**: Execute CLI verification on a completed conversion; assert evaluation JSON includes structure/asset/equation scores and discrepancies, and integration tests flag intentionally corrupted outputs.
+**Independent Test**: Convert fixture → run `poetry run paper2md verify --package <dir>`; expect checksum verification, evaluation report persisted even on detected discrepancies, and CLI exit status reflects issues.
 
 ### Tests for User Story 3 (MANDATORY - write first) ⚠️
 
-- [ ] T044 [P] [US3] Add evaluation service unit tests with mocked VLM comparison outputs in `tests/unit/services/test_evaluation.py`
-- [ ] T045 [P] [US3] Create CLI option test ensuring verification runs independently via `tests/unit/test_cli.py`
-- [ ] T046 [P] [US3] Extend integration test to corrupt markdown intentionally and assert discrepancies appear in `tests/integration/test_end_to_end.py`
-- [ ] T071 [P] [US3] Add docs lint/check in `tests/unit/test_docs_fidelity.py` verifying `docs/fidelity-review.md` explains current evaluation heuristics (Principle V)
-- [ ] T073 [P] [US3] Add manifest reader checksum tests in `tests/unit/models/test_manifest_reader.py` to prove packages re-verify before evaluation
+- [ ] T055 [P] [US3] Add evaluation service tests in `tests/unit/services/test_evaluation.py`
+- [ ] T056 [P] [US3] Add CLI verify command tests in `tests/unit/test_cli.py::test_verify_runs_without_convert`
+- [ ] T057 [P] [US3] Extend integration suite (`tests/integration/test_verify_end_to_end.py`) to corrupt markdown and expect discrepancy logging
+- [ ] T058 [P] [US3] Add docs lint/coverage test in `tests/unit/test_docs_fidelity.py` ensuring `docs/fidelity-review.md` stays updated
+- [ ] T059 [P] [US3] Add manifest reader checksum tests in `tests/unit/models/test_manifest_reader.py`
 
 ### Implementation for User Story 3
 
-- [ ] T047 [US3] Implement evaluation orchestrator in `src/paper2md/services/evaluation.py` to run comparative VLM prompts
-- [ ] T048 [US3] Add CLI flag/command (`paper2md verify`) wired to evaluation service in `src/paper2md/cli.py`
-- [ ] T049 [US3] Persist evaluation JSON alongside markdown within `src/paper2md/services/storage.py`
-- [ ] T050 [US3] Update manifest schema to link evaluation scores + discrepancy summaries in `src/paper2md/models/manifest.py`
-- [ ] T051 [US3] Document evaluation workflow and report interpretation in `docs/fidelity-review.md`
-- [ ] T052 [US3] Update integration test harness to run verification mode post-conversion automatically
-- [ ] T074 [US3] Ensure `paper2md verify` (and supporting storage helpers) re-run manifest checksum verification before evaluation begins
+- [ ] T060 [US3] Implement VLM evaluation orchestrator in `src/paper2md/services/evaluation.py`
+- [ ] T061 [US3] Add `paper2md verify` Typer command + options in `src/paper2md/cli.py`
+- [ ] T062 [US3] Ensure manifest reader re-validates checksums before evaluation in `src/paper2md/services/storage.py`
+- [ ] T063 [US3] Persist evaluation JSON + link to manifest in `src/paper2md/models/manifest.py`
+- [ ] T064 [US3] Update storage helpers to save `evaluation.json` alongside markdown in `src/paper2md/services/storage.py`
+- [ ] T065 [US3] Document verification workflow + troubleshooting in `docs/fidelity-review.md` and `quickstart.md`
+- [ ] T066 [US3] Update integration harness to auto-run verify after convert in `tests/integration/test_convert_end_to_end.py`
 
-**Checkpoint**: All user stories should now be independently functional
+**Checkpoint**: Verification runs independently, enforcing checksum integrity and surfacing fidelity discrepancies.
 
 ---
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-**Purpose**: Improvements that affect multiple user stories
+**Purpose**: Repository-wide refinements post-stories.
 
-- [ ] T053 [P] Add structured logging + progress reporting to `src/paper2md/cli.py` and `pipeline/orchestrator.py`
-- [ ] T055 [P] Improve documentation (`README.md`, `quickstart.md`, `docs/cli-behavior.md`) with rationale + troubleshooting (post-story polish)
-- [ ] T058 [P] Add telemetry hooks or manifest flags for unresolved OCR vs. TEI conflicts
-- [ ] T059 Ensure intent-focused comments/ADRs capture reconciliation and evaluation heuristics (Principle V reinforcement)
+- [ ] T067 [P] Add structured logging + progress reporting to `src/paper2md/cli.py` and `src/paper2md/pipeline/orchestrator.py`
+- [ ] T068 [P] Refresh developer docs (`README.md`, `docs/cli-behavior.md`, `quickstart.md`) with lessons learned + troubleshooting
+- [ ] T069 [P] Re-run 20-page SLA + large-PDF fixtures, archive metrics in `docs/perf-report.md`, and update telemetry thresholds if needed
+- [ ] T070 Capture final ADR/rationale for reconciliation & evaluation heuristics in `docs/adr/001-paper2md.md`
+- [ ] T071 Add telemetry flags for unresolved OCR vs TEI conflicts in `src/paper2md/models/manifest.py`
 
 ---
 
@@ -190,74 +177,41 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **Phase 2b (Telemetry)**: Depends on Foundational completion - BLOCKS all user stories until per-page metrics + correlation logging exist
-- **User Stories (Phase 3+)**: All depend on Foundational + Phase 2b completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order (P1 → P1 → P2)
-- **Polish (Final Phase)**: Depends on all desired user stories being complete
+- **Phase 1 (Setup)** → prerequisite for all later work.
+- **Phase 2 (Foundational)** depends on setup; BLOCKS all user stories until tests/fixtures/docs exist.
+- **Phase 2b (Telemetry Gate)** depends on Phase 2; BLOCKS user stories until SLA + logging instrumentation pass.
+- **Phase 3 (US1)** begins after telemetry gate; produces MVP convert flow.
+- **Phase 4 (US2)** builds atop US1 outputs (needs asset hooks from convert pipeline).
+- **Phase 5 (US3)** depends on US1 + US2 artifacts to audit and requires checksum metadata.
+- **Phase N (Polish)** runs after desired stories complete.
 
 ### User Story Dependencies
 
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P1)**: Builds on US1 outputs and requires asset/equation infrastructure; otherwise independent logic
-- **User Story 3 (P2)**: Depends on US1 + US2 outputs existing to compare against
-- **Large-PDF streaming tasks (T056, T060, T061)**: Treated as part of US1 MVP; must pass before moving to US2
+- **US1 (P1)**: Requires foundational + telemetry phases only.
+- **US2 (P1)**: Requires US1 (uses convert pipeline) plus foundational artifacts.
+- **US3 (P2)**: Requires US1 + US2 outputs available for verification.
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
-- Models before services
-- Services before CLI/manifest wiring
-- Core implementation before integration
-- Story complete before moving to next priority
+- Tests fail first → implementation follows.
+- Models before services; services before CLI wiring.
+- Update docs/automation within the same story phase to keep artifacts independent.
 
 ### Parallel Opportunities
 
-- Adapter/unit test tasks (T009–T010, T014–T019, T030–T034, T044–T046) can run simultaneously once scaffolding exists.
-- VLM and OCR modules in US2 can be developed in parallel because they touch different files.
-- Evaluation service (US3) can start while documentation/polish efforts run, as long as converted packages exist for testing.
+- Setup tasks T004–T008 can run concurrently once repo skeleton exists.
+- Foundational tests T009–T016 touch different modules and may proceed in parallel.
+- Telemetry tasks T017–T021 split between tests, orchestration, and docs, enabling parallel work.
+- Within each story, unit tests (e.g., T022–T027, T041–T044, T055–T059) can be divided across contributors while integration tests (T028, T045, T057) gate completion.
+- Implementation tasks touching disjoint files (e.g., VLM extractor vs markdown writer) are marked [P] where safe.
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 Only)
+1. Finish Phases 1–2b to guarantee automation + telemetry gates.
+2. Ship MVP (`paper2md convert`) by completing US1.
+3. Layer asset/equation extraction (US2) to deliver reviewer-ready markdown.
+4. Add verification workflow (US3) for automated fidelity audits.
+5. Execute Polish tasks for logging, docs, and ADRs.
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Deploy/demo if ready
-
-### Incremental Delivery
-
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deliver MVP
-3. Add User Story 2 → Test independently → Deliver asset-rich version
-4. Add User Story 3 → Test independently → Deliver audited version
-5. Execute Polish phase for performance + docs
-
-### Parallel Team Strategy
-
-With multiple developers:
-
-1. Team completes Setup + Foundational together
-2. Once Foundational is done:
-   - Developer A: User Story 1
-   - Developer B: User Story 2
-   - Developer C: User Story 3
-3. Stories complete and integrate independently
-
----
-
-## Notes
-
-- [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
-- Each user story should be independently completable and testable
-- Verify tests fail before implementing
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
