@@ -47,7 +47,7 @@ paths:
           description: Unknown job
   /api/conversions/{jobId}/evaluation:
     post:
-      summary: Trigger fidelity evaluation rerun for an existing markdown package
+      summary: Trigger fidelity evaluation rerun for an existing markdown package (mirrors `paper2md verify`)
       operationId: recheckEvaluation
       parameters:
         - in: path
@@ -55,6 +55,17 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                forceRecheck:
+                  type: boolean
+                  default: false
+                  description: If true, bypasses cached evaluation results after checksum verification succeeds
       responses:
         '200':
           description: Evaluation rerun completed
@@ -63,7 +74,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/EvaluationReport'
         '409':
-          description: Conversion not finished yet
+          description: Conversion not finished yet or checksum verification failed
 components:
   schemas:
     StartConversionRequest:
@@ -104,16 +115,22 @@ components:
           format: date-time
         manifestPath:
           type: string
+        telemetryPath:
+          type: string
+          description: Location of serialized per-page timing data used for SLA verification
         warnings:
           type: array
           items:
             type: string
     EvaluationReport:
       type: object
-      required: [jobId, structureScore, assetScore, equationScore]
+      required: [jobId, checksumVerified, structureScore, assetScore, equationScore]
       properties:
         jobId:
           type: string
+        checksumVerified:
+          type: boolean
+          description: Indicates manifest + markdown checksums passed before evaluation ran
         structureScore:
           type: number
           format: float

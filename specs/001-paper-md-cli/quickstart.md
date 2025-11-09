@@ -24,15 +24,24 @@ This command:
 - Rasterizes each page at 300 DPI
 - Extracts figures/tables/algorithms/equations via Qwen3-VL
 - Uses Qwen3-VL OCR to capture text ordering and reconcile with TEI
-- Writes `paper.md`, asset crops, manifest JSON, and fidelity evaluation report
+- Writes `paper.md`, asset crops, manifest JSON, telemetry data, and TEI cache artifacts
 
-## 3. Review Outputs
+## 3. Verify the Package
+```bash
+poetry run paper2md verify \
+  --package ./output/streampetr
+```
+This command checks the manifest + markdown checksum, replays the fidelity evaluation via Qwen3-VL,
+and stores `evaluation.json` (structure/assets/equations scores + discrepancies) next to the manifest.
+
+## 4. Review Outputs
 - `paper.md`: Primary markdown file with embedded asset references
 - `assets/`: Folder with figures/tables/algorithms cropped at source resolution
 - `manifest.json`: Counts, warnings, and mappings for traceability
-- `evaluation.json`: Fidelity report scored by the VLM validator
+- `telemetry.json`: Per-page timings used to prove the ≤1 minute/page average
+- `evaluation.json`: Fidelity report produced after running `paper2md verify`
 
-## 4. Automated Tests
+## 5. Automated Tests
 From repo root:
 ```bash
 make test

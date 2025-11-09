@@ -74,8 +74,38 @@
   - `evaluation_report` (string): Path to fidelity review JSON.
   - `section_outline` (ordered list): Derived from TEI, each node containing heading, level,
     source page range, and reconciled text hash for regression tests.
+  - `telemetry_path` (string): Location of serialized `TelemetryRecord` array for per-page timings.
 - **Relationships**:
   - Consumes `AssetCatalog`, `LayoutPage`, and `EquationRef` data when rendering markdown.
+  - References `TelemetryRecord` entries for SLA reporting and `EvaluationReport` for verification output.
 - **Validation Rules**:
   - `section_outline` must match TEI order exactly.
-  - Manifest must include and validate the markdown checksum for downstream integrity checks.
+  - Manifest must include and validate the markdown checksum for downstream integrity checks, and checksum verification must pass before `paper2md verify` proceeds.
+
+## Entity: TelemetryRecord
+- **Description**: Captures per-page runtime metrics and structured logging identifiers used for SLA enforcement.
+- **Fields**:
+  - `job_id` (UUID, FK → ConversionJob)
+  - `page_index` (int, zero-based) and `page_number` (int, 1-indexed)
+  - `started_at` / `finished_at` (timestamps)
+  - `duration_ms` (int)
+  - `correlation_ids` (object: `job_id`, `page_id`)
+  - `stage_breakdown` (object with rasterize/vlm/ocr/reconcile durations)
+  - `warnings` (list<string>)
+- **Relationships**:
+  - Aggregated as part of `MarkdownPackage.telemetry_path` and referenced by perf tests + docs.
+- **Validation Rules**:
+  - `duration_ms` must be ≤ 60 000 for SLA compliance; violations raise manifest warnings and fail the telemetry test gate.
+
+## Entity: EvaluationReport
+- **Description**: Output of `paper2md verify`, comparing markdown to the source PDF via Qwen3-VL.
+- **Fields**:
+  - `job_id` (UUID)
+  - `checksum_verified` (bool): Indicates manifest + markdown integrity passed before evaluation.
+  - `structure_score`, `asset_score`, `equation_score` (floats 0–1)
+  - `discrepancies` (list<Discrepancy>): Entries noting category, description, page references, remediation tips.
+  - `generated_at` (timestamp)
+- **Relationships**:
+  - Linked from `MarkdownPackage.evaluation_report` and stored alongside manifest files.
+- **Validation Rules**:
+  - `checksum_verified` must be true; otherwise verification aborts and emits an error instead of scores.

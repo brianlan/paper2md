@@ -48,3 +48,17 @@
 - **Alternatives Considered**:
   - *Ad-hoc scripts*: Harder to maintain and review.
   - *Heavy integration tests only*: Slow feedback and brittle when services are offline.
+
+## 8. Telemetry & Performance Instrumentation
+- **Decision**: Capture per-page `TelemetryRecord`s (start/end timestamps, duration, page index, corruption flags) during conversion and persist them both in logs (with `job_id` + `page_id` correlation IDs) and in `docs/perf-report.md` via automated tests, promoting the 20-page SLA run to a pre-story gate.
+- **Rationale**: Keeping telemetry data adjacent to manifests makes SLA verification reproducible and satisfies the ≤1 minute/page average without manual benchmarking; correlation IDs ease outage debugging per Constitution Principle III.
+- **Alternatives Considered**:
+  - *Ad-hoc timing logs*: Hard to assert in tests and easy to regress.
+  - *CI-only perf jobs*: Would hide instrumentation details from local runs.
+
+## 9. Checksum Verification on Read
+- **Decision**: Store SHA-256 hashes for key artifacts in the manifest and require every downstream read path (including `paper2md verify`) to re-run checksum verification before exposing data. A dedicated manifest reader helper fails fast if mismatches occur.
+- **Rationale**: Prevents tampered packages from entering the evaluation pipeline, preserves auditability, and aligns with Principle I (readability) by centralizing the verification logic.
+- **Alternatives Considered**:
+  - *Conversion-time checks only*: Would miss corruption between convert and verify.
+  - *Filesystem ACL reliance*: Environment-specific and does not detect silent bit rot.
