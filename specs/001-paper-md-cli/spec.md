@@ -187,9 +187,10 @@ stores it alongside the markdown without altering the conversion output.
 
 ### Non-Functional Requirements
 
-- **NFR-001**: The CLI MUST complete a 20-page conversion (including fidelity audit) in ≤10 minutes
-  and process each page in ≤30 seconds; the orchestrator MUST emit per-page duration metrics (start/end
-  timestamps, page index) that are persisted to logs and perf fixtures for regression tests.
+- **NFR-001**: The CLI MUST complete a 20-page conversion (including fidelity audit) with an average
+  processing time of ≤1 minute per page (≤20 minutes total for the 20-page fixture). The orchestrator
+  MUST emit per-page duration metrics (start/end timestamps, page index) that are persisted to logs and
+  perf fixtures for regression tests so the rolling average can be enforced.
 - **NFR-002**: Structured logging MUST record every external call (GROBID, pdf2image, models) with a
   consistent correlation identifier (`job_id` + `page_id` where applicable) so outages are diagnosable
   post-run and traces can be reconstructed.
@@ -230,8 +231,8 @@ stores it alongside the markdown without altering the conversion output.
   items.
 - **SC-003**: At least 95% of equations in validation PDFs are rendered with mathematically identical
   LaTeX (validated via automated comparison tests against golden fixtures).
-- **SC-004**: The entire CLI workflow completes within 10 minutes for a 20-page paper on reference
-  hardware, including the fidelity evaluation step.
+- **SC-004**: The entire CLI workflow averages ≤1 minute per page on the 20-page reference paper,
+  including the fidelity evaluation step (≤20 minutes total), with evidence captured in perf reports.
 
 ## Assumptions & Dependencies
 

@@ -60,6 +60,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 
 **Purpose**: Instrumentation mandated by NFR-001/NFR-002 must exist before any user story begins
 
+- [ ] T057 [P] Run the 20-page SLA fixture (`tests/data/sample_papers/streampetr/20p/`), capture perf metrics in `docs/perf-report.md`, and fail if the average exceeds 1 minute per page (≤20 minutes total)
 - [ ] T062 [P] Add `tests/integration/test_perf_timings.py` that records per-page durations, fails if any page exceeds 30 s, and updates `docs/perf-report.md` with the captured SLA data
 - [ ] T063 [P] Instrument `src/paper2md/pipeline/orchestrator.py` to log per-page start/end timestamps + metrics and persist them to the manifest/logs; add pytest coverage ensuring timings exist
 - [ ] T064 [P] Propagate correlation IDs (`job_id`/`page_id`) through adapters (`grobid.py`, `vlm_extractor.py`, `ocr.py`) and assert structured logs contain them via new tests in `tests/unit/pipeline/test_logging.py`
@@ -158,6 +159,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T045 [P] [US3] Create CLI option test ensuring verification runs independently via `tests/unit/test_cli.py`
 - [ ] T046 [P] [US3] Extend integration test to corrupt markdown intentionally and assert discrepancies appear in `tests/integration/test_end_to_end.py`
 - [ ] T071 [P] [US3] Add docs lint/check in `tests/unit/test_docs_fidelity.py` verifying `docs/fidelity-review.md` explains current evaluation heuristics (Principle V)
+- [ ] T073 [P] [US3] Add manifest reader checksum tests in `tests/unit/models/test_manifest_reader.py` to prove packages re-verify before evaluation
 
 ### Implementation for User Story 3
 
@@ -167,6 +169,7 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 - [ ] T050 [US3] Update manifest schema to link evaluation scores + discrepancy summaries in `src/paper2md/models/manifest.py`
 - [ ] T051 [US3] Document evaluation workflow and report interpretation in `docs/fidelity-review.md`
 - [ ] T052 [US3] Update integration test harness to run verification mode post-conversion automatically
+- [ ] T074 [US3] Ensure `paper2md verify` (and supporting storage helpers) re-run manifest checksum verification before evaluation begins
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -178,7 +181,6 @@ before implementation. If a spec explicitly forbids tests, call it out as a risk
 
 - [ ] T053 [P] Add structured logging + progress reporting to `src/paper2md/cli.py` and `pipeline/orchestrator.py`
 - [ ] T055 [P] Improve documentation (`README.md`, `quickstart.md`, `docs/cli-behavior.md`) with rationale + troubleshooting (post-story polish)
-- [ ] T057 [P] Conduct performance run on 20-page paper, record metrics in `docs/perf-report.md`
 - [ ] T058 [P] Add telemetry hooks or manifest flags for unresolved OCR vs. TEI conflicts
 - [ ] T059 Ensure intent-focused comments/ADRs capture reconciliation and evaluation heuristics (Principle V reinforcement)
 

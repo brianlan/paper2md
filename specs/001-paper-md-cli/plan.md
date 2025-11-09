@@ -192,9 +192,9 @@ No violations detected; Complexity Tracking remains empty.
 
 ## Phase 2b – Observability & Telemetry (Pre-Story Gate)
 
-- **Goal**: Satisfy NFR-001/002 before feature work by instrumenting per-page metrics, correlation IDs, and SLA tests.
-- **Deliverables**: Telemetry tests (`tests/integration/test_perf_timings.py`, `tests/unit/pipeline/test_logging.py`), orchestrator instrumentation (T062–T064), and perf-report documentation with captured metrics.
-- **Gate**: User Story phases may not start until telemetry tests fail/pass cycle is complete; ensures Principle III (“Relentless Automation”) remains enforceable.
+- **Goal**: Satisfy NFR-001/002 before feature work by instrumenting per-page metrics, correlation IDs, and SLA tests (including the 20-page average ≤1 minute per page run).
+- **Deliverables**: Telemetry tests (`tests/integration/test_perf_timings.py`, `tests/unit/pipeline/test_logging.py`), orchestrator instrumentation (T062–T064), the promoted 20-page SLA fixture run (T057), and perf-report documentation with captured metrics.
+- **Gate**: User Story phases may not start until telemetry tests and the 20-page SLA run complete the fail/pass cycle; ensures Principle III (“Relentless Automation”) remains enforceable.
 
 ## Phase 3 – User Story 1 (Researcher Conversion MVP)
 
@@ -211,8 +211,8 @@ No violations detected; Complexity Tracking remains empty.
 
 ## Phase 5 – User Story 3 (Fidelity Review)
 
-- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, and documentation of interpretation guidance (docs/fidelity-review.md updated per Principle V plus automated docs lint).
-- **Tests first**: T044–T046 + T071 extend unit + integration coverage for evaluation flows, including corruption detection and doc drift prevention.
+- **Scope**: Evaluation service orchestrator, CLI `verify` command, discrepancy reporting, manifest linkage, manifest checksum re-validation before evaluation, and documentation of interpretation guidance (docs/fidelity-review.md updated per Principle V plus automated docs lint).
+- **Tests first**: T044–T046 + T071 + T073 extend unit + integration coverage for evaluation flows, including corruption detection, doc drift prevention, and checksum verification on read.
 - **Exit criteria**: Verification can run independently, reports persist alongside markdown, and automation scripts cover both convert + verify workflows.
 
 ## Phase N – Polish & Quality Gates
