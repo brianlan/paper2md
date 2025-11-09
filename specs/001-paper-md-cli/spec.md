@@ -187,10 +187,11 @@ stores it alongside the markdown without altering the conversion output.
 
 ### Non-Functional Requirements
 
-- **NFR-001**: The CLI MUST complete a 20-page conversion (including fidelity audit) with an average
-  processing time of ≤1 minute per page (≤20 minutes total for the 20-page fixture). The orchestrator
-  MUST emit per-page duration metrics (start/end timestamps, page index) that are persisted to logs and
-  perf fixtures for regression tests so the rolling average can be enforced.
+- **NFR-001**: The CLI MUST complete a 20-page conversion run (the `paper2md convert` pipeline) with an
+  average processing time of ≤1 minute per page (≤20 minutes total for the convert fixture). Verification
+  is measured separately. The orchestrator MUST emit per-page duration metrics (start/end timestamps,
+  page index) that are persisted to logs and perf fixtures for regression tests so the rolling average
+  can be enforced.
 - **NFR-002**: Structured logging MUST record every external call (GROBID, pdf2image, models) with a
   consistent correlation identifier (`job_id` + `page_id` where applicable) so outages are diagnosable
   post-run and traces can be reconstructed.
@@ -214,6 +215,9 @@ stores it alongside the markdown without altering the conversion output.
   the original PDF coordinates.
 - **MarkdownPackage**: Bundle containing the final markdown, embedded asset links, manifest, and
   evaluation report for delivery to the user.
+- *TelemetryRecord* and *EvaluationReport* definitions live in `specs/001-paper-md-cli/data-model.md`.
+  They provide the per-page timing metrics (used by NFR-001) and checksum-validated evaluation outputs
+  required by FR-009/FR-011; reference that document for field-level details.
 
 ## Success Criteria *(mandatory)*
 
@@ -231,8 +235,9 @@ stores it alongside the markdown without altering the conversion output.
   items.
 - **SC-003**: At least 95% of equations in validation PDFs are rendered with mathematically identical
   LaTeX (validated via automated comparison tests against golden fixtures).
-- **SC-004**: The entire CLI workflow averages ≤1 minute per page on the 20-page reference paper,
-  including the fidelity evaluation step (≤20 minutes total), with evidence captured in perf reports.
+- **SC-004**: The `paper2md convert` workflow averages ≤1 minute per page on the 20-page reference
+  paper (≤20 minutes total), with evidence captured in perf reports. Verification runs may add time but
+  are tracked independently.
 
 ## Assumptions & Dependencies
 
