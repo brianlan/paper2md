@@ -180,8 +180,6 @@ stores it alongside the markdown without altering the conversion output.
 - **FR-009**: The CLI MUST expose a `paper2md verify` command that re-invokes the VLM on an existing
   conversion package to produce a fidelity evaluation (structure, assets, equations) and save that
   report alongside the markdown without mutating the generated content.
-- **FR-010**: Automation hooks MUST exist (`make test` or equivalent) to run deterministic regression
-  tests covering PDF ingestion, asset counts, and evaluation reporting using fixture documents.
 - **FR-011**: The manifest MUST record a cryptographic checksum of the markdown output and verify the
   checksum whenever the package is read or delivered.
 
@@ -199,8 +197,9 @@ stores it alongside the markdown without altering the conversion output.
   actionable error messages and skipping destructive retries, per constitution Principle IV.
 - **NFR-004**: Documentation (`README`, `quickstart`, manifest schema comments) MUST explain why OCR
   overrides GROBID or why evaluation heuristics were chosen, satisfying Principle V.
-- **NFR-005**: Automation scripts (`make lint`, `make test`, CI workflows) MUST block merges unless
-  ruff, mypy, unit, and integration tests pass, reinforcing Principle III.
+- **NFR-005**: Automation scripts (`make lint`, `make type`, `make test`, CI workflows) MUST block
+  merges unless ruff, mypy, unit, integration, and regression tests for convert/verify pass, tying
+  together the deterministic hooks required for FR-010 (now folded here) and Principle III.
 
 ### Key Entities *(include if feature involves data)*
 

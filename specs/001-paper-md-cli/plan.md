@@ -149,11 +149,11 @@ Gate result: PASS — constitution principles remain satisfied with documented r
 2. Test foundations — pytest layout, orchestrator/storage unit tests (failing), fixture PDFs, golden
    manifest/evaluation examples, CLI behavior contract doc.
 3. Reliability hardening — adapter outage simulations, manifest checksum tests, telemetry test suite,
-   and the promoted 20-page SLA run (T057) that enforces the ≤1 minute/page average.
+   and the promoted 20-page SLA run (T017–T020) that enforces the ≤1 minute/page average.
 
 **Gates & Dependencies**:
-- Tests T009–T013, T054, T018–T019, T057, T062–T064 must fail before code lands; green runs unlock
-  Phase 3 story work.
+- Tests T009–T016 must fail before code lands; telemetry tasks T017–T021 must complete before Phase 3
+  story work begins.
 - Automation scripts (`make lint`, `make type`, `make test`, telemetry runners) must succeed locally
   and inside CI to uphold Principle III.
 - Documentation (`docs/cli-behavior.md`, `docs/perf-report.md`) must be updated alongside scaffolding
