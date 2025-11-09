@@ -8,13 +8,14 @@
 ## Overview & Context
 
 Researchers currently juggle PDFs, local OCR/VLM models, and ad-hoc scripts to summarize papers, which
-is brittle and unrepeatable. Paper2MD introduces a single Typer CLI that must run inside
+is brittle and unrepeatable. Paper2MD introduces a Typer CLI that must run inside
 `/ssd4/envs/llm_py310_torch271_cu128`, call the co-located GROBID + model stack, and emit a
-markdown+manifest package suitable for review. The CLI keeps all processing local (privacy mandate),
-streams large PDFs to respect memory caps, and documents every reconciliation decision so future
-audits understand why OCR or VLM outputs were trusted. Success depends on deterministic automation
-(`make test`) and structured artifacts that downstream tooling can rely on without re-opening the
-original PDF.
+markdown+manifest package suitable for review. Conversion happens via `paper2md convert`, while the
+fidelity audit runs separately via `paper2md verify` so teams can re-check outputs on demand. The CLI
+keeps all processing local (privacy mandate), streams large PDFs to respect memory caps, and documents
+every reconciliation decision so future audits understand why OCR or VLM outputs were trusted. Success
+depends on deterministic automation (`make test`) and structured artifacts that downstream tooling can
+rely on without re-opening the original PDF.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -46,9 +47,9 @@ quickly summarize academic papers.
 **Why this priority**: This is the core promise of the tool; without reliable end-to-end conversion,
 no downstream workflow exists.
 
-**Independent Test**: Execute the CLI against the sample PDF with automation scripts; verify that
-the command completes with exit code 0, produces a markdown file with all section headers in the
-same order as the source, and emits a manifest tying outputs to inputs.
+**Independent Test**: Execute `paper2md convert` against the sample PDF with automation scripts;
+verify that the command completes with exit code 0, produces a markdown file with all section headers
+in the same order as the source, and emits a manifest tying outputs to inputs.
 
 **Acceptance Scenarios**:
 
@@ -108,17 +109,17 @@ the source PDF so I can trust the conversion without manual spot checks.
 
 **Why this priority**: The review step prevents publishing incomplete or inaccurate markdown outputs.
 
-**Independent Test**: Trigger the CLI verification mode; confirm it runs the local VLM comparison,
-produces a structured report covering text layout, assets, and equations, and stores it alongside the
-markdown without altering the conversion output.
+**Independent Test**: Trigger `paper2md verify` on a completed conversion package; confirm it runs the
+local VLM comparison, produces a structured report covering text layout, assets, and equations, and
+stores it alongside the markdown without altering the conversion output.
 
 **Acceptance Scenarios**:
 
-1. **Given** a completed markdown conversion, **When** the CLI calls the VLM review, **Then** it
-   outputs a report scoring text structure, figure/table alignment, and equation accuracy, and saves
-   the report even if issues are detected.
-2. **Given** discrepancies (e.g., missing figure), **When** the review runs, **Then** it flags the
-   mismatch with page/section references so the user can troubleshoot.
+1. **Given** a completed markdown conversion, **When** the user runs `paper2md verify`, **Then** the
+   CLI outputs a report scoring text structure, figure/table alignment, and equation accuracy, and
+   saves the report even if issues are detected.
+2. **Given** discrepancies (e.g., missing figure), **When** the verification command runs, **Then** it
+   flags the mismatch with page/section references so the user can troubleshoot before re-delivery.
 
 **Failing Tests First**:
 - `tests/unit/services/test_evaluation.py::test_scores_record_discrepancies` mocks VLM responses to
@@ -176,9 +177,9 @@ markdown without altering the conversion output.
   logging any corrections back into the scaffold.
 - **FR-008**: The final markdown output MUST mirror the section hierarchy from GROBID, embed links to
   extracted assets, and include a manifest summarizing page-to-section mappings plus any anomalies.
-- **FR-009**: After conversion, the CLI MUST re-invoke the VLM to produce a fidelity evaluation
-  (structure, assets, equations) and save that report alongside the markdown without mutating the
-  generated content.
+- **FR-009**: The CLI MUST expose a `paper2md verify` command that re-invokes the VLM on an existing
+  conversion package to produce a fidelity evaluation (structure, assets, equations) and save that
+  report alongside the markdown without mutating the generated content.
 - **FR-010**: Automation hooks MUST exist (`make test` or equivalent) to run deterministic regression
   tests covering PDF ingestion, asset counts, and evaluation reporting using fixture documents.
 - **FR-011**: The manifest MUST record a cryptographic checksum of the markdown output and verify the
@@ -225,7 +226,8 @@ markdown without altering the conversion output.
 - **SC-001**: 100% of conversion runs produce markdown whose section ordering matches the PDF outline
   as reported by GROBID (verified via automated comparison).
 - **SC-002**: Figures, tables, algorithms, and equations extracted per run match the counts reported
-  by the evaluation report within a tolerance of zero missing items.
+  by the evaluation report (when `paper2md verify` is executed) within a tolerance of zero missing
+  items.
 - **SC-003**: At least 95% of equations in validation PDFs are rendered with mathematically identical
   LaTeX (validated via automated comparison tests against golden fixtures).
 - **SC-004**: The entire CLI workflow completes within 10 minutes for a 20-page paper on reference

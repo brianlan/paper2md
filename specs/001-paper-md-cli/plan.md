@@ -11,8 +11,8 @@ Create a conda-bound CLI that ingests an academic PDF, derives a TEI XML scaffol
 GROBID service (`http://localhost:8070`), rasterizes each page at 300 DPI, and coordinates the local
 Qwen3-VL model (for figures/tables/algorithms/equations *and* OCR text) to produce a fully-structured
 markdown package. The CLI enforces the mandated conda environment, instruments per-page timing and
-correlation-ID logs for every external call, and re-runs the VLM to audit fidelity so researchers can
-trust the conversion without manual QA.
+correlation-ID logs for every external call, and pairs the `paper2md convert` flow with a dedicated
+`paper2md verify` command so researchers can audit fidelity without re-running conversion.
 
 ## Technical Context
 
@@ -198,7 +198,7 @@ No violations detected; Complexity Tracking remains empty.
 
 ## Phase 3 – User Story 1 (Researcher Conversion MVP)
 
-- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation (with OCR correction logging surfaced to manifest + logs), markdown writer (embedding asset captions + correction summaries), and checksum enforcement.
+- **Scope**: CLI command (`paper2md convert`) covering env validation, GROBID fetch + cache, rasterization, scaffold reconciliation (with OCR correction logging surfaced to manifest + logs), markdown writer (embedding asset captions + correction summaries), and checksum enforcement. Verification is deferred to the dedicated Phase 5 story.
 - **Tests first**: T014–T019 + T065 + T066 + T070 cover CLI, GROBID client/cache reuse, rasterizer, reconciler logging, markdown embedding, manifest checksums, and end-to-end flow with mocked adapters.
 - **Exit criteria**: Integration test proves PDF→markdown pipeline, telemetry hooks stay green, correction logs are persisted/readable, README/docs explain OCR overrides (Principle V), and manifest checksum verification blocks tampered output.
 - **Edge-case handling**: Large-PDF streaming + fixture/documentation tasks (T056, T060, T061) are part of this phase so MVP already honors the memory guarantees from the spec.
